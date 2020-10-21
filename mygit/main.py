@@ -346,13 +346,12 @@ def create_indexed_paths(fs: AbstractFileSystem, c: Constants):
             indexed_paths[pair_path_blob[0]] = pair_path_blob[1]
 
 
-def write_down_index():
+def write_down_index(fs: AbstractFileSystem, c: Constants):
     result = list()
     for path in indexed_paths:
-        result.append(str(path.relative_to(workspace_path)) + " " + indexed_paths[path])
+        result.append(f"{path} {indexed_paths[path]}")
     content = compress(bytes("\n".join(result), encoding="utf-8"), -1)
-    with Path.open(mygit_index_path, "wb") as index:
-        index.write(content)
+    fs.write_file_binary(c.mygit_index_path, content)
 
 
 def clean_index(fs: AbstractFileSystem, c: Constants):
@@ -361,11 +360,11 @@ def clean_index(fs: AbstractFileSystem, c: Constants):
     fs.write_file_text(c.mygit_index_path, "")
 
 
-def create_workspace_commit_state():
-    content = get_last_commit_workspace_state_content()
+def create_workspace_commit_state(fs: AbstractFileSystem, c: Constants):
+    content = get_last_commit_workspace_state_content(fs, c)
     for buffer in content.split("\n"):
         pair_path_blob = buffer.split()
-        blob_path = workspace_path / pair_path_blob[0]
+        blob_path = pair_path_blob[0]
         blob_checksum = pair_path_blob[1]
 
         workspace_commit_state[blob_path] = blob_checksum
@@ -382,35 +381,35 @@ def write_down_workspace_state(workspace_state: dict, fs: AbstractFileSystem, c:
     return checksum
 
 
-def clear_workspace():
-    for child in workspace_path.iterdir():
+def clear_workspace(fs: AbstractFileSystem):
+    for child in fs.get_directory_files("."):
         if child not in ignored_paths:
-            if child.is_file():
-                Path.unlink(child)
+            if fs.is_file(child):
+                fs.remove_file(child)
             else:
-                clear_directory(child)
+                clear_directory(child, fs)
 
 
-def clear_directory(directory_path: Path):
-    for child in directory_path.iterdir():
+def clear_directory(directory_path: str, fs: AbstractFileSystem):
+    for child in fs.get_directory_files(directory_path):
         if child not in ignored_paths:
-            if child.is_file():
-                Path.unlink(child)
+            if fs.is_file(child):
+                fs.remove_file(child)
             else:
-                clear_directory(child)
-    directory_path.rmdir()
+                clear_directory(child, fs)
+    fs.remove_directory(directory_path)
 
 
-def get_tree_content(saved_tree_checksum: str):
+def get_tree_content(saved_tree_checksum: str, fs: AbstractFileSystem, c: Constants):
     content = dict()
     if saved_tree_checksum == "":
         return content
 
-    saved_tree = get_compressed_file_content(mygit_objects_path / saved_tree_checksum).split("\n")
+    saved_tree = get_compressed_file_content(f"{c.mygit_objects_path}/{saved_tree_checksum}", fs).split("\n")
     for i in range(len(saved_tree)):
         buffer = saved_tree[i].split()
         object_type = buffer[0]
-        path = workspace_path / buffer[1]
+        path = buffer[1]
         checksum = buffer[2]
 
         if object_type not in content:
@@ -530,133 +529,125 @@ def create_blob(file_path: str, fs: AbstractFileSystem, c: Constants):
 
 
 #===============================Checkout========================================
-def handle_checkout(namespace: argparse.Namespace):
+def handle_checkout(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
     if namespace.new_branch:
-        create_new_branch_from_current_and_checkout(namespace.branch[0])
+        create_new_branch_from_current_and_checkout(namespace.branch[0], fs, c)
     else:
-        checkout_to_branch(namespace.branch[0])
+        checkout_to_branch(namespace.branch[0], fs, c)
 
 
-def checkout_to_branch(branch_name):
-    branch_path = mygit_branches_path / branch_name
-    if not branch_path.exists():
+def checkout_to_branch(branch_name: str, fs: AbstractFileSystem, c: Constants):
+    branch_path = f"{c.mygit_branches_path}/{branch_name}"
+    if not fs.is_exist(branch_path):
         print(Fore.RED + "branch " + branch_name + " doesn't exist")
     elif has_uncommited_changes():
-        print(Fore.RED + "you can't checkout with uncommited changes, use commit or reset") #TODO reset
+        print(Fore.RED + "you can't checkout with uncommited changes, use commit or reset")  # TODO reset
     else:
-        clear_workspace()
-        expand_tree(get_last_tree_checksum(branch_path))
+        clear_workspace(fs)
+        expand_tree(get_last_tree_checksum(branch_path, fs, c), fs, c)
 
-        with Path.open(mygit_head_path, "w") as head:
-            head.write(branch_name)
+        fs.write_file_text(c.mygit_head_path, branch_name)
         print(Fore.GREEN + "moved to branch " + branch_name)
 
 
-def create_new_branch_from_current_and_checkout(new_branch_name: str):
-    create_new_branch_from_current(new_branch_name)
-    with Path.open(mygit_head_path, "w") as head:
-        head.write(new_branch_name)
+def create_new_branch_from_current_and_checkout(new_branch_name: str, fs: AbstractFileSystem, c: Constants):
+    create_new_branch_from_current(new_branch_name, fs, c)
+    fs.write_file_text(c.mygit_head_path, new_branch_name)
     print(Fore.GREEN + "moved to new branch " + new_branch_name)
 
 
-def expand_tree(tree_checksum: str):
-    tree_content = get_tree_content(tree_checksum)
-    for type in tree_content:
-        if type == "blob":
-            for path in tree_content[type]:
-                expand_blob(tree_content[type][path], path)
+def expand_tree(tree_checksum: str, fs: AbstractFileSystem, c: Constants):
+    tree_content = get_tree_content(tree_checksum, fs, c)
+    for obj_type in tree_content:
+        if obj_type == "blob":
+            for path in tree_content[obj_type]:
+                expand_blob(tree_content[obj_type][path], path, fs, c)
         else:
-            for path in tree_content[type]:
-                Path.mkdir(path)
-                expand_tree(tree_content[type][path])
+            for path in tree_content[obj_type]:
+                fs.create_directory(path)
+                expand_tree(tree_content[obj_type][path], fs, c)
 
 
-def expand_blob(blob_checksum: str, target_filename: Path):
-    with Path.open(mygit_objects_path / blob_checksum, "rb") as source:
-        content = decompress(source.read())
-
-    with Path.open(target_filename, "wb") as file:
-        file.write(content)
+def expand_blob(blob_checksum: str, target_filename: str, fs: AbstractFileSystem, c: Constants):
+    source = fs.get_file_content_binary(f"{c.mygit_objects_path}/{blob_checksum}")
+    content = decompress(source)
+    fs.write_file_binary(target_filename, content)
 
 
 #===============================Branch==========================================
-def handle_branch(namespace: argparse.Namespace):
+def handle_branch(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
     if namespace.remove is not None:
-        remove_branch(namespace.remove[0])
+        remove_branch(namespace.remove[0], fs, c)
     elif namespace.add_from_commit is not None:
         if namespace.add_from_commit[1] == "HEAD":
-            create_new_branch_from_current(namespace.add[0])
+            create_new_branch_from_current(namespace.add[0], fs, c)
         else:
-            create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1])
+            create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1], fs, c)
     elif namespace.list:
-        show_branches()
+        show_branches(fs, c)
     else:
         print(Fore.YELLOW + "write arguments")
 
 
-def remove_branch(branch_name: str):
-    branch_path = mygit_branches_path / branch_name
-    if branch_name == get_current_branch_name():
+def remove_branch(branch_name: str, fs: AbstractFileSystem, c: Constants):
+    branch_path = f"{c.mygit_branches_path}/{branch_name}"
+    if branch_name == get_current_branch_name(fs, c):
         print(Fore.YELLOW + "you can't remove the branch, on which you are. Checkout to another branch first")
-    elif not branch_path.exists():
+    elif not fs.is_exist(branch_path):
         print(Fore.RED + "branch doesn't exist")
     else:
-        with Path.open(branch_path, "r") as branch:
-            commit_checksum = branch.read()
-        Path.unlink(branch_path)
+        commit_checksum = fs.get_file_content_text(branch_path)
+        fs.remove_file(branch_path)
         print(Fore.GREEN + "Deleted branch " + branch_name + " (" + commit_checksum + ")")
 
 
-def create_new_branch_from_current(new_branch_name: str):
-    current_branch_path = get_current_branch_path()
-    last_commit = get_last_commit_checksum(current_branch_path)
-    create_new_branch_from_commit(new_branch_name, last_commit)
+def create_new_branch_from_current(new_branch_name: str, fs: AbstractFileSystem, c: Constants):
+    current_branch_path = get_current_branch_path(fs, c)
+    last_commit = get_last_commit_checksum(current_branch_path, fs)
+    create_new_branch_from_commit(new_branch_name, last_commit, fs, c)
 
 
-def create_new_branch_from_commit(branch_name: str, commit_checksum: str):
-    branch_path = mygit_branches_path / branch_name
-    commit_path = mygit_objects_path / commit_checksum
-    if branch_path.exists():
+def create_new_branch_from_commit(branch_name: str, commit_checksum: str, fs: AbstractFileSystem, c: Constants):
+    branch_path = f"{c.mygit_branches_path}/{branch_name}"
+    commit_path = f"{c.mygit_objects_path}/{commit_checksum}"
+    if fs.is_exist(branch_path):
         print(Fore.YELLOW + "branch " + branch_name + " already exists")
-    elif not commit_path.exists():
+    elif not fs.is_exist(commit_path):
         print(Fore.RED + "commit doesn't exist")
     else:
-        with Path.open(branch_path, "w") as new_branch:
-            new_branch.write(commit_checksum)
+        fs.write_file_text(branch_path, commit_checksum)
         print(Fore.GREEN + "new branch " + branch_name + " is created")
 
 
-def show_branches():
+def show_branches(fs: AbstractFileSystem, c: Constants):
     print("branches:")
-    for branch_path in mygit_branches_path.iterdir():
-        print(Fore.YELLOW + str(branch_path.relative_to(mygit_branches_path)))
+    for branch_path in fs.get_directory_files(c.mygit_branches_path):
+        print(Fore.YELLOW + branch_path)
 
 
 #================================Merge==========================================
-def handle_merge(namespace: argparse.Namespace):
-    merge(namespace.merge_branch[0])
+def handle_merge(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
+    merge(namespace.merge_branch[0], fs, c)
 
 
-def merge(branch_name: str):
-    branch_path = mygit_branches_path / branch_name
-    current_branch_name = get_current_branch_name()
-    current_branch_path = mygit_branches_path / current_branch_name
+def merge(branch_name: str, fs: AbstractFileSystem, c: Constants):
+    branch_path = f"{c.mygit_branches_path}/{branch_name}"
+    current_branch_name = get_current_branch_name(fs, c)
+    current_branch_path = f"{c.mygit_branches_path}/{current_branch_name}"
 
-    if not branch_path.exists():
+    if not fs.is_exist(branch_path):
         print(Fore.RED + "branch " + branch_name + " doesn't exist")
     else:
-        from_commit_checksum = get_last_commit_checksum(current_branch_path)
-        to_commit_checksum = get_last_commit_checksum(branch_path)
+        from_commit_checksum = get_last_commit_checksum(current_branch_path, fs)
+        to_commit_checksum = get_last_commit_checksum(branch_path, fs)
         if from_commit_checksum == to_commit_checksum:
             print(Fore.RED + "You can't merge " + current_branch_name + " with " + branch_name + ".\nBranches are pointing on the same commit")
         elif has_uncommited_changes():
             print(Fore.RED + "you can't merge with uncommited changes, use commit or reset")  # TODO reset
-        elif can_be_fast_forwarded(from_commit_checksum, to_commit_checksum):
-            clear_workspace()
-            expand_tree(get_tree_checksum(mygit_objects_path / to_commit_checksum))
-
-            with Path.open(current_branch_path, "w") as current_branch:
-                current_branch.write(to_commit_checksum)
+        elif can_be_fast_forwarded(from_commit_checksum, to_commit_checksum, fs, c):
+            clear_workspace(fs)
+            expand_tree(get_tree_checksum(f"{c.mygit_objects_path}/{to_commit_checksum}", fs), fs, c)
+            fs.write_file_text(current_branch_path, to_commit_checksum)
 
             print(Fore.GREEN + "merged " + branch_name + " into current branch")
             print(Fore.RESET + "you can safely delete branch " + branch_name + " with branch -r <branch_name>")
@@ -664,99 +655,97 @@ def merge(branch_name: str):
             print(Fore.RED + "Possible merging conflicts, fast-forward is impossible")
 
 
-def can_be_fast_forwarded(from_commit_checksum: str, to_commit_checksum: str):
+def can_be_fast_forwarded(from_commit_checksum: str, to_commit_checksum: str, fs: AbstractFileSystem, c: Constants):
     commit_checksum = to_commit_checksum
 
     while commit_checksum != "":
         if commit_checksum == from_commit_checksum:
             return True
-        commit_content = get_commit_content(commit_checksum)
+        commit_content = get_commit_content(commit_checksum, fs, c)
         commit_checksum = get_commit_parent_commit(commit_content)
     return False
 
 
 #=================================Reset=========================================
-def handle_reset(namespace: argparse.Namespace):
+def handle_reset(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
     if namespace.index is not None:
         if len(namespace.index) > 0:
             if namespace.hard:
-                reset_to_commit_state(namespace.index)
+                reset_to_commit_state(namespace.index, fs, c)
                 print(Fore.GREEN + "specified indexed files were restored to their last recorded state")
-            delete_indexed_changes(namespace.index)
+            delete_indexed_changes(namespace.index, fs, c)
             print(Fore.GREEN + "specified indexed changes were deleted from index")
         else:
             if namespace.hard:
-                reset_all_indexed_files_to_commit_state()
+                reset_all_indexed_files_to_commit_state(fs, c)
                 print(Fore.GREEN + "all indexed files were restored to their last recorded state")
-            clean_index()
+            clean_index(fs, c)
             print(Fore.GREEN + "index was cleaned")
     else:
-        clear_workspace()
-        expand_tree(get_last_tree_checksum(get_current_branch_path()))
+        clear_workspace(fs)
+        expand_tree(get_last_tree_checksum(get_current_branch_path(fs, c), fs, c), fs, c)
         print(Fore.GREEN + "workspace was reset to last commit state")
 
 
-def delete_indexed_changes(objects_to_reset: list):
-    for object in objects_to_reset:
-        object_path = workspace_path / object
-        if not object_path.exists():
-            delete_indexed_changes_file(object_path)  #TODO so we can't reset indexed deleted directory
-        elif object_path.is_file():
-            delete_indexed_changes_file(object_path)
+def delete_indexed_changes(objects_to_reset: list, fs: AbstractFileSystem, c: Constants):
+    for obj in objects_to_reset:
+        if not fs.is_exist(obj):
+            delete_indexed_changes_file(obj, fs, c)  # TODO so we can't reset indexed deleted directory
+        elif fs.is_file(obj):
+            delete_indexed_changes_file(obj, fs, c)
         else:
-            delete_indexed_changes_dir(object_path)
+            delete_indexed_changes_dir(obj, fs, c)
 
     if len(indexed_paths) == 0:
-        clean_index()
+        clean_index(fs, c)
     else:
-        write_down_index()
+        write_down_index(fs, c)
 
 
-def delete_indexed_changes_file(file_path_absolute: Path):
+def delete_indexed_changes_file(file_path_absolute: str, fs: AbstractFileSystem, c: Constants):
     if file_path_absolute in indexed_paths:
-        blob_index_path = mygit_index_dir_path / indexed_paths.pop(file_path_absolute)
-        if blob_index_path.exists():
-            Path.unlink(blob_index_path)
+        blob_index_path = f"{c.mygit_index_dir_path}/{indexed_paths.pop(file_path_absolute)}"
+        if fs.is_exist(blob_index_path):
+            fs.remove_file(blob_index_path)
 
 
-def delete_indexed_changes_dir(dir_path_absolute: Path):
-    for child in dir_path_absolute.iterdir():
-        if child.is_file():
-            delete_indexed_changes_file(child)
+def delete_indexed_changes_dir(dir_path_absolute: str, fs: AbstractFileSystem, c: Constants):
+    for child in fs.get_directory_files(dir_path_absolute):
+        if fs.is_file(child):
+            delete_indexed_changes_file(child, fs, c)
         else:
-            delete_indexed_changes_dir(child)
+            delete_indexed_changes_dir(child, fs, c)
 
 
-def reset_to_commit_state(objects_to_reset: list):
-    for object in objects_to_reset:
-        object_path = workspace_path / object
-        if not object_path.exists():
-            reset_to_commit_state_file(object_path)  #TODO so we can't reset indexed deleted directory
-        elif object_path.is_file():
-            reset_to_commit_state_file(object_path)
+def reset_to_commit_state(objects_to_reset: list, fs: AbstractFileSystem, c: Constants):
+    for obj in objects_to_reset:
+        if not obj.exists():
+            reset_to_commit_state_file(obj, fs, c)  # TODO so we can't reset indexed deleted directory
+        elif obj.is_file():
+            reset_to_commit_state_file(obj, fs, c)
         else:
-            reset_to_commit_state_dir(object_path)
+            reset_to_commit_state_dir(obj, fs, c)
 
 
-def reset_to_commit_state_file(file_path_absolute: Path):
+def reset_to_commit_state_file(file_path_absolute: str, fs: AbstractFileSystem, c: Constants):
     if file_path_absolute in indexed_paths:
         if file_path_absolute in workspace_commit_state:
-            expand_blob(workspace_commit_state[file_path_absolute], file_path_absolute)
+            expand_blob(workspace_commit_state[file_path_absolute], file_path_absolute, fs, c)
         else:
-            Path.unlink(file_path_absolute)
+            fs.remove_file(file_path_absolute)
 
 
-def reset_to_commit_state_dir(dir_path_absolute: Path):
-    for child in dir_path_absolute.iterdir():
-        if child.is_file():
-            reset_to_commit_state_file(child)
+def reset_to_commit_state_dir(dir_path_absolute: str, fs: AbstractFileSystem, c: Constants):
+    for child in fs.get_directory_files(dir_path_absolute):
+        if fs.is_file(child):
+            reset_to_commit_state_file(child, fs, c)
         else:
-            reset_to_commit_state_dir(child)
+            reset_to_commit_state_dir(child, fs, c)
 
 
-def reset_all_indexed_files_to_commit_state():
+def reset_all_indexed_files_to_commit_state(fs: AbstractFileSystem, c: Constants):
     for path in indexed_paths:
-        reset_to_commit_state_file(path)
+        reset_to_commit_state_file(path, fs, c)
 
 
 #=================================Status========================================
@@ -783,8 +772,8 @@ def check_status():
         status_is_checked = True
 
 
-def print_status():
-    print("On branch " + get_current_branch_name())
+def print_status(fs: AbstractFileSystem, c: Constants):
+    print("On branch " + get_current_branch_name(fs, c))
 
     if not has_uncommited_changes():
         print("nothing to commit, working tree is clean")
@@ -808,12 +797,11 @@ def print_status():
         print()
 
 
-def check_blob(file_path: Path):
-    with Path.open(file_path, "rb") as source:
-        content = compress(source.read(), -1)
-        checksum = sha1(content).hexdigest()
-        relative_path = str(file_path.relative_to(workspace_path))
-        message = "modified: " + relative_path
+def check_blob(file_path: str, fs: AbstractFileSystem):
+    source = fs.get_file_content_binary(file_path)
+    content = compress(source, -1)
+    checksum = sha1(content).hexdigest()
+    message = "modified: " + file_path
 
     if file_path in workspace_commit_state and workspace_commit_state[file_path] == checksum:
         return
@@ -826,19 +814,19 @@ def check_blob(file_path: Path):
         status_not_indexed_paths.append(message)
 
 
-def check_tree(dir_path: Path):
-    for child in dir_path.iterdir():
+def check_tree(dir_path: str, fs: AbstractFileSystem):
+    for child in fs.get_directory_files(dir_path):
         if child not in ignored_paths:
-            if child.is_file():
-                check_blob(child)
+            if fs.is_file(child):
+                check_blob(child, fs)
             else:
-                check_tree(child)
+                check_tree(child, fs)
 
 
-def check_deleted_files():
+def check_deleted_files(fs: AbstractFileSystem):
     for path in workspace_commit_state:
-        if not path.exists():
-            message = "deleted: " + str(path.relative_to(workspace_path))
+        if not fs.is_exist(path):
+            message = f"deleted: {path}"
             if path not in indexed_paths:
                 status_not_indexed_paths.append(message)
             else:
@@ -848,7 +836,7 @@ def check_deleted_files():
 def print_ignored_paths():
     print(Fore.YELLOW + "ignored paths:")
     for ignored in ignored_paths:
-        print(str(ignored.relative_to(workspace_path)))
+        print(ignored)
 
 
 def print_indexed_paths():
@@ -857,7 +845,7 @@ def print_indexed_paths():
     else:
         print(Fore.RESET + "indexed paths:")
         for path in indexed_paths:
-            print(Fore.GREEN + str(path.relative_to(workspace_path)) + " " + indexed_paths[path])
+            print(Fore.GREEN + path + " " + indexed_paths[path])
 
 
 #================================Index==========================================
@@ -870,20 +858,20 @@ def handle_index(namespace: argparse.Namespace):
         print(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")
 
 
-def index_all_changes():
-    for child in workspace_path.iterdir():
-        index_object(child)
+def index_all_changes(fs: AbstractFileSystem, c: Constants):
+    for child in fs.get_directory_files("."):
+        index_object(child, fs, c)
     index_deleted_files()
-    write_down_index()
+    write_down_index(fs, c)
 
 
-def index_input_files(files: list):
+def index_input_files(files: list, fs: AbstractFileSystem, c: Constants):
     if len(files) == 0:
         print(Fore.YELLOW + "you didn't mention any file")
     else:
         for file in files:
-            index_object(workspace_path / file)
-        write_down_index()
+            index_object(file, fs, c)
+        write_down_index(fs, c)
 
 
 def index_object(file_path: str, fs: AbstractFileSystem, c: Constants):
