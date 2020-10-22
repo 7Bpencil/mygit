@@ -59,8 +59,8 @@ def clean_index(c: Constants):
     Path.open(c.mygit_index_path, "w").close()
 
 
-def create_workspace_commit_state(c: Constants, s: State):
-    content = get_last_commit_workspace_state_content(c)
+def create_last_commit_index_state(c: Constants, s: State):
+    content = get_last_commit_index_content(c)
     for buffer in content.split("\n"):
         pair_path_blob = buffer.split()
         blob_path = c.workspace_path / pair_path_blob[0]
@@ -147,7 +147,7 @@ def get_last_commit_checksum(branch_path: Path):
     return last_commit_checksum
 
 
-def get_last_commit_workspace_state_content(c: Constants):
+def get_last_commit_index_content(c: Constants):
     commit_content = get_commit_content(get_last_commit_checksum(get_current_branch_path(c)), c)
     content_checksum = commit_content[1]
     return get_compressed_file_content(c.mygit_objects_path / content_checksum)

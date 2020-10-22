@@ -18,7 +18,7 @@ from mygit.commands.commit import Commit
 from mygit.constants import Constants
 from mygit.state import State
 
-from mygit.backend import create_ignored_paths, create_indexed_paths, create_workspace_commit_state, is_init
+from mygit.backend import create_ignored_paths, create_indexed_paths, create_last_commit_index_state, is_init
 
 
 def main():
@@ -98,7 +98,7 @@ def create_commands(subparsers: argparse._SubParsersAction):
 def handle_command(commands: dict, namespace: argparse.Namespace, constants: Constants, state: State):
     create_ignored_paths(constants, state)
     create_indexed_paths(constants, state)
-    create_workspace_commit_state(constants, state)
+    create_last_commit_index_state(constants, state)
 
     if namespace.command == "init":
         print(Fore.YELLOW + "directory already contains the repository")
