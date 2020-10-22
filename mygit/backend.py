@@ -8,25 +8,6 @@ from mygit.state import State
 from zlib import decompress, compress
 
 
-def init(fs: AbstractFileSystem, c: Constants, s: State):
-    fs.create_directory(c.mygit_path)
-    fs.create_directory(c.mygit_objects_path)
-    fs.create_directory(c.mygit_refs_path)
-    fs.create_directory(c.mygit_branches_path)
-    fs.create_directory(c.mygit_index_dir_path)
-
-    default_branch_name = "master"
-    fs.write_file_text(c.mygit_head_path, default_branch_name)
-    fs.create_file(f"{c.mygit_branches_path}/{default_branch_name}")
-    fs.create_file(c.mygit_index_path)
-    fs.write_file_text(c.mygit_ignore_path, ".mygit")
-
-    index_object(c.mygit_ignore_path, fs, c, s)
-    create_ignored_paths(fs, c, s)
-    create_indexed_paths(fs, c, s)
-    make_commit("init", fs, c, s)
-
-
 def is_init(fs: AbstractFileSystem, c: Constants):
     return fs.is_exist(c.mygit_path)
 
@@ -176,7 +157,7 @@ def get_compressed_file_content(file_path: str, fs: AbstractFileSystem):
 
 # ===Commit=============================================================================================================
 def make_commit(commit_message: str, fs: AbstractFileSystem, c: Constants, s: State):
-    if not has_uncommited_changes(fs, s):
+    if not has_uncommitted_changes(fs, s):
         print(Fore.YELLOW + "working tree is clean, you can't commit if there's no changes")
     elif len(s.status_indexed_paths) == 0:
         print(Fore.YELLOW + "you can't commit if your index is empty, use index <file1, file2, ...> to index changes")
@@ -246,18 +227,11 @@ def create_blob(file_path: str, fs: AbstractFileSystem, c: Constants, s: State):
 
 
 # ===Checkout===========================================================================================================
-def handle_checkout(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants, s: State):
-    if namespace.new_branch:
-        create_new_branch_from_current_and_checkout(namespace.branch[0], fs, c)
-    else:
-        checkout_to_branch(namespace.branch[0], fs, c, s)
-
-
 def checkout_to_branch(branch_name: str, fs: AbstractFileSystem, c: Constants, s: State):
     branch_path = f"{c.mygit_branches_path}/{branch_name}"
     if not fs.is_exist(branch_path):
         print(Fore.RED + "branch " + branch_name + " doesn't exist")
-    elif has_uncommited_changes(fs, s):
+    elif has_uncommitted_changes(fs, s):
         print(Fore.RED + "you can't checkout with uncommited changes, use commit or reset")  # TODO reset
     else:
         clear_workspace(fs, s)
@@ -292,20 +266,6 @@ def expand_blob(blob_checksum: str, target_filename: str, fs: AbstractFileSystem
 
 
 # ===Branch=============================================================================================================
-def handle_branch(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
-    if namespace.remove is not None:
-        remove_branch(namespace.remove[0], fs, c)
-    elif namespace.add_from_commit is not None:
-        if namespace.add_from_commit[1] == "HEAD":
-            create_new_branch_from_current(namespace.add[0], fs, c)
-        else:
-            create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1], fs, c)
-    elif namespace.list:
-        show_branches(fs, c)
-    else:
-        print(Fore.YELLOW + "write arguments")
-
-
 def remove_branch(branch_name: str, fs: AbstractFileSystem, c: Constants):
     branch_path = f"{c.mygit_branches_path}/{branch_name}"
     if branch_name == get_current_branch_name(fs, c):
@@ -343,10 +303,6 @@ def show_branches(fs: AbstractFileSystem, c: Constants):
 
 
 # ===Merge==============================================================================================================
-def handle_merge(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants, s: State):
-    merge(namespace.merge_branch[0], fs, c, s)
-
-
 def merge(branch_name: str, fs: AbstractFileSystem, c: Constants, s: State):
     branch_path = f"{c.mygit_branches_path}/{branch_name}"
     current_branch_name = get_current_branch_name(fs, c)
@@ -359,7 +315,7 @@ def merge(branch_name: str, fs: AbstractFileSystem, c: Constants, s: State):
         to_commit_checksum = get_last_commit_checksum(branch_path, fs)
         if from_commit_checksum == to_commit_checksum:
             print(Fore.RED + "You can't merge " + current_branch_name + " with " + branch_name + ".\nBranches are pointing on the same commit")
-        elif has_uncommited_changes(fs, s):
+        elif has_uncommitted_changes(fs, s):
             print(Fore.RED + "you can't merge with uncommited changes, use commit or reset")  # TODO reset
         elif can_be_fast_forwarded(from_commit_checksum, to_commit_checksum, fs, c):
             clear_workspace(fs, s)
@@ -384,26 +340,6 @@ def can_be_fast_forwarded(from_commit_checksum: str, to_commit_checksum: str, fs
 
 
 # ===Reset==============================================================================================================
-def handle_reset(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants, s: State):
-    if namespace.index is not None:
-        if len(namespace.index) > 0:
-            if namespace.hard:
-                reset_to_commit_state(namespace.index, fs, c, s)
-                print(Fore.GREEN + "specified indexed files were restored to their last recorded state")
-            delete_indexed_changes(namespace.index, fs, c, s)
-            print(Fore.GREEN + "specified indexed changes were deleted from index")
-        else:
-            if namespace.hard:
-                reset_all_indexed_files_to_commit_state(fs, c, s)
-                print(Fore.GREEN + "all indexed files were restored to their last recorded state")
-            clean_index(fs, c)
-            print(Fore.GREEN + "index was cleaned")
-    else:
-        clear_workspace(fs, s)
-        expand_tree(get_last_tree_checksum(get_current_branch_path(fs, c), fs, c), fs, c)
-        print(Fore.GREEN + "workspace was reset to last commit state")
-
-
 def delete_indexed_changes(objects_to_reset: list, fs: AbstractFileSystem, c: Constants, s: State):
     for obj in objects_to_reset:
         if not fs.is_exist(obj):
@@ -466,17 +402,7 @@ def reset_all_indexed_files_to_commit_state(fs: AbstractFileSystem, c: Constants
 
 
 # ===Status=============================================================================================================
-def handle_status(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants, s: State):
-    check_status(fs, s)
-    if namespace.indexed:
-        print_indexed_paths(s)
-    elif namespace.ignored:
-        print_ignored_paths(s)
-    else:
-        print_status(fs, c, s)
-
-
-def has_uncommited_changes(fs: AbstractFileSystem, s: State):
+def has_uncommitted_changes(fs: AbstractFileSystem, s: State):
     check_status(fs, s)
     return len(s.status_indexed_paths) + len(s.status_not_indexed_paths) > 0
 
@@ -491,7 +417,7 @@ def check_status(fs: AbstractFileSystem, s: State):
 def print_status(fs: AbstractFileSystem, c: Constants, s: State):
     print("On branch " + get_current_branch_name(fs, c))
 
-    if not has_uncommited_changes(fs, s):
+    if not has_uncommitted_changes(fs, s):
         print("nothing to commit, working tree is clean")
 
     if len(s.status_indexed_paths) > 0:
@@ -565,15 +491,6 @@ def print_indexed_paths(s: State):
 
 
 # ===Index==============================================================================================================
-def handle_index(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants, s: State):
-    if namespace.all:
-        index_all_changes(fs, c, s)
-    elif len(namespace.files) > 0:
-        index_input_files(namespace.files, fs, c, s)
-    else:
-        print(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")
-
-
 def index_all_changes(fs: AbstractFileSystem, c: Constants, s: State):
     for child in fs.get_directory_files("."):
         index_object(child, fs, c, s)
@@ -645,15 +562,6 @@ def index_deleted_files(s: State):
 
 
 # ===Log================================================================================================================
-def handle_log(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
-    print_function = print_commit_content_oneline if namespace.oneline else print_commit_content
-    commit_checksum = get_last_commit_checksum(get_current_branch_path(fs, c), fs)
-    while commit_checksum != "":
-        commit_content = get_commit_content(commit_checksum, fs, c)
-        print_function(commit_checksum, commit_content)
-        commit_checksum = get_commit_parent_commit(commit_content)
-
-
 def get_commit_content(commit_checksum: str, fs: AbstractFileSystem, c: Constants):
     return get_compressed_file_content(f"{c.mygit_objects_path}/{commit_checksum}", fs).split("\n")
 
@@ -675,14 +583,6 @@ def print_commit_content_oneline(commit_checksum: str, content: list):
 
 
 # ===Print==============================================================================================================
-def handle_print(namespace: argparse.Namespace, fs: AbstractFileSystem, c: Constants):
-    for file in namespace.compressed_files:
-        print_compressed_object(file, fs, c)
-        print()
-    if len(namespace.compressed_files) == 0:
-        print(Fore.YELLOW + "print <checksum1, checksum2, ...> to print objects")
-
-
 def print_compressed_object(checksum: str, fs: AbstractFileSystem, c: Constants):
     object_path = f"{c.mygit_objects_path}/{checksum}"
     if not fs.is_exist(object_path):

@@ -1,6 +1,10 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
+from file_system.abstract_file_system import AbstractFileSystem
+from mygit.constants import Constants
+from mygit.state import State
+from mygit.backend import create_new_branch_from_current_and_checkout, checkout_to_branch
 
 
 class Checkout(Command):
@@ -25,5 +29,8 @@ class Checkout(Command):
         command_parser.add_argument('-n', '--new_branch', action='store_true',
                                     default=False)
 
-    def work(self, namespace: argparse.Namespace):
-        print("CHECKOUT IS WORKING!")
+    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+        if namespace.new_branch:
+            create_new_branch_from_current_and_checkout(namespace.branch[0], file_system, constants)
+        else:
+            checkout_to_branch(namespace.branch[0], file_system, constants, state)

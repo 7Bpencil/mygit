@@ -1,6 +1,10 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
+from file_system.abstract_file_system import AbstractFileSystem
+from mygit.constants import Constants
+from mygit.state import State
+from mygit.backend import print_compressed_object
 
 
 class Print(Command):
@@ -19,5 +23,9 @@ class Print(Command):
     def __add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("compressed_files", nargs="+")
 
-    def work(self, namespace: argparse.Namespace):
-        print("PRINT IS WORKING!")
+    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+        for file in namespace.compressed_files:
+            print_compressed_object(file, file_system, constants)
+            print()
+        if len(namespace.compressed_files) == 0:
+            print(Fore.YELLOW + "print <checksum1, checksum2, ...> to print objects")

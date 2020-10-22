@@ -1,6 +1,10 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
+from file_system.abstract_file_system import AbstractFileSystem
+from mygit.constants import Constants
+from mygit.state import State
+from mygit.backend import index_all_changes, index_input_files
 
 
 class Index(Command):
@@ -28,5 +32,10 @@ class Index(Command):
         command_parser.add_argument("files", nargs="*",
                                     help="files or directories to index")
 
-    def work(self, namespace: argparse.Namespace):
-        print("INDEX IS WORKING!")
+    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+        if namespace.all:
+            index_all_changes(file_system, constants, state)
+        elif len(namespace.files) > 0:
+            index_input_files(namespace.files, file_system, constants, state)
+        else:
+            print(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")

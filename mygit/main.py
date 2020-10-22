@@ -13,6 +13,13 @@ from mygit.commands.merge import Merge
 from mygit.commands.reset import Reset
 from mygit.commands.commit import Commit
 
+from file_system.abstract_file_system import AbstractFileSystem
+from mygit.constants import Constants
+from mygit.state import State
+
+from mygit.backend import create_ignored_paths, create_indexed_paths, create_workspace_commit_state, is_init
+from file_system.file_system import FileSystem
+
 
 def main():
     colorama_init()
@@ -22,13 +29,17 @@ def main():
     commands = create_commands(subparsers)
     namespace = parser.parse_args()
 
+    file_system = FileSystem()
+    constants = Constants()
+    state = State()
+
     if namespace.command is None:
         print(Fore.YELLOW + "write command or use 'mygit -h' for help")
     else:
-        if is_init():
-            handle_command(commands, namespace)
+        if is_init(file_system, constants):
+            handle_command(commands, namespace, file_system, constants, state)
         elif namespace.command == "init":
-            init()
+            commands[namespace.command].work(namespace, file_system, constants, state)
             print(Fore.GREEN + "new repository is created")
         else:
             print(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
@@ -84,12 +95,12 @@ def create_commands(subparsers: argparse._SubParsersAction):
     return commands
 
 
-def handle_command(commands: dict, namespace: argparse.Namespace):
-    create_ignored_paths()
-    create_indexed_paths()
-    create_workspace_commit_state()
+def handle_command(commands: dict, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    create_ignored_paths(file_system, constants, state)
+    create_indexed_paths(file_system, constants, state)
+    create_workspace_commit_state(file_system, constants, state)
 
     if namespace.command == "init":
         print(Fore.YELLOW + "directory already contains the repository")
     else:
-        commands[namespace.command].work(namespace)
+        commands[namespace.command].work(namespace, file_system, constants, state)
