@@ -28,10 +28,10 @@ class Status(Command):
                                   help="show ignored paths")
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
-        check_status(state)
+        check_status(constants, state)
         if namespace.indexed:
-            print_indexed_paths(state)
+            print_indexed_paths(constants, state)
         elif namespace.ignored:
-            print_ignored_paths(state)
+            print_ignored_paths(constants, state)
         else:
             print_status(constants, state)
