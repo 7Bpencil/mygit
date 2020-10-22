@@ -15,7 +15,7 @@ from mygit.commands.commit import Commit
 from mygit.commands.checkout import Checkout
 from mygit.commands.branch import Branch
 
-from mygit.backend import create_ignored_paths, create_indexed_paths, create_last_commit_index_state, is_init
+from mygit.backend import is_init
 from colorama import init as colorama_init, deinit as colorama_deinit, Fore
 
 
@@ -93,9 +93,7 @@ def create_commands(subparsers: argparse._SubParsersAction):
 
 
 def handle_command(commands: dict, namespace: argparse.Namespace, constants: Constants, state: State):
-    create_ignored_paths(constants, state)
-    create_indexed_paths(constants, state)
-    create_last_commit_index_state(constants, state)
+    state.load_cache(constants)
 
     if namespace.command == "init":
         print(Fore.YELLOW + "directory already contains the repository")

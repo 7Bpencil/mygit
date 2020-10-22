@@ -2,7 +2,7 @@ import argparse
 from mygit.state import State
 from mygit.constants import Constants
 from mygit.command import Command
-from mygit.backend import index_object, create_ignored_paths, create_indexed_paths, make_commit
+from mygit.backend import index_object, make_commit
 from pathlib import Path
 
 
@@ -29,6 +29,5 @@ class Init(Command):
             ignore.write(".mygit")
 
         index_object(constants.mygit_ignore_path, constants, state)
-        create_ignored_paths(constants, state)
-        create_indexed_paths(constants, state)
+        state.load_cache(constants)
         make_commit("init", constants, state)

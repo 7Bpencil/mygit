@@ -11,39 +11,6 @@ def is_init(c: Constants):
     return c.mygit_path.exists()
 
 
-def create_ignored_paths(c: Constants, s: State):
-    with Path.open(c.mygit_ignore_path, "r") as ignored:
-        for path in ignored.readlines():
-            absolute_path = c.workspace_path / path.strip()
-            if path == "\n" or not absolute_path.exists():
-                continue
-            if absolute_path.is_file():
-                add_file_in_ignored(absolute_path, s)
-            else:
-                add_directory_in_ignored(absolute_path, s)
-
-
-def add_file_in_ignored(file_path: Path, s: State):
-    s.ignored_paths.add(file_path)
-
-
-def add_directory_in_ignored(dir_path: Path, s: State):
-    add_file_in_ignored(dir_path, s)
-    for child in dir_path.iterdir():
-        if child.is_file():
-            add_file_in_ignored(child, s)
-        else:
-            add_directory_in_ignored(child, s)
-
-
-def create_indexed_paths(c: Constants, s: State):
-    content = get_compressed_file_content(c.mygit_index_path)
-    if content != "":
-        for buffer in content.split("\n"):
-            pair_path_blob = buffer.split()
-            s.current_indexed_paths[c.workspace_path / pair_path_blob[0]] = pair_path_blob[1]
-
-
 def write_down_index(c: Constants, s: State):
     result = list()
     for path in s.current_indexed_paths:
@@ -57,16 +24,6 @@ def clean_index(c: Constants):
     for child in c.mygit_index_dir_path.iterdir():
         Path.unlink(child)
     Path.open(c.mygit_index_path, "w").close()
-
-
-def create_last_commit_index_state(c: Constants, s: State):
-    content = get_last_commit_index_content(c)
-    for buffer in content.split("\n"):
-        pair_path_blob = buffer.split()
-        blob_path = c.workspace_path / pair_path_blob[0]
-        blob_checksum = pair_path_blob[1]
-
-        s.last_commit_indexed_path[blob_path] = blob_checksum
 
 
 def write_down_workspace_state(workspace_state: dict, c: Constants):
@@ -148,7 +105,10 @@ def get_last_commit_checksum(branch_path: Path):
 
 
 def get_last_commit_index_content(c: Constants):
-    commit_content = get_commit_content(get_last_commit_checksum(get_current_branch_path(c)), c)
+    last_commit_checksum = get_last_commit_checksum(get_current_branch_path(c))
+    if last_commit_checksum == "":
+        return ""
+    commit_content = get_commit_content(last_commit_checksum, c)
     content_checksum = commit_content[1]
     return get_compressed_file_content(c.mygit_objects_path / content_checksum)
 
