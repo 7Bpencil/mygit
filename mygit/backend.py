@@ -569,14 +569,14 @@ def get_commit_parent_commit(commit_content: list):
 
 
 def print_commit_content(commit_checksum: str, content: list):
-    logging.info("commit: " + commit_checksum)
-    logging.info("date: " + content[3])
-    logging.info("message:")
-    logging.info("\n" + " " * 4 + content[2] + "\n")
+    logging.info(Fore.YELLOW + f"commit: {commit_checksum}\n" +
+                 Fore.RESET + f"date: {content[3]}\n"
+                              f"message:\n\n"
+                              f"    {content[2]}\n")
 
 
 def print_commit_content_oneline(commit_checksum: str, content: list):
-    logging.info(commit_checksum + " " + content[2])
+    logging.info(Fore.YELLOW + commit_checksum + " " + Fore.RESET + content[2])
 
 
 def print_internal_log(c: Constants):
