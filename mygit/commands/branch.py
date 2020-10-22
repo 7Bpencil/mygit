@@ -48,9 +48,9 @@ class Branch(Command):
             remove_branch(namespace.remove[0], constants)
         elif namespace.add_from_commit is not None:
             if namespace.add_from_commit[1] == "HEAD":
-                create_new_branch_from_current(namespace.add[0], constants)
+                create_new_branch_from_current(namespace.add_from_commit[0], constants)
             else:
-                create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1], constants)
+                create_new_branch_from_commit(namespace.add_from_commit[0], namespace.add_from_commit[1], constants)
         elif namespace.list:
             show_branches(constants)
         else:
