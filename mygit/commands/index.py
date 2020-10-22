@@ -25,7 +25,7 @@ class Index(Command):
 
         super().__init__("index", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument('-a', '--all', action='store_true', default=False,
                                     help="index all changes in workspace")
         command_parser.add_argument("files", nargs="*",

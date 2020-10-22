@@ -29,7 +29,7 @@ class Branch(Command):
 
         super().__init__("branch", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         branch_group = command_parser.add_mutually_exclusive_group()
         branch_group.add_argument("-r", "--remove", nargs=1,
                                   metavar="branch",

@@ -19,7 +19,7 @@ class Print(Command):
 
         super().__init__("print", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("compressed_files", nargs="+")
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):

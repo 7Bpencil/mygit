@@ -20,7 +20,7 @@ class Merge(Command):
 
         super().__init__("merge", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("merge_branch", nargs=1)
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):

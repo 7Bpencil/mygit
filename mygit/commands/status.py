@@ -20,7 +20,7 @@ class Status(Command):
 
         super().__init__("status", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         status_group = command_parser.add_mutually_exclusive_group()
         status_group.add_argument('--indexed', action='store_true', default=False,
                                   help="show indexed paths")

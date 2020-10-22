@@ -23,7 +23,7 @@ class Checkout(Command):
 
         super().__init__("checkout", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("branch", nargs=1)
         command_parser.add_argument('-n', '--new_branch', action='store_true',
                                     default=False)

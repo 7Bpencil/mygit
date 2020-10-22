@@ -36,7 +36,7 @@ class Reset(Command):
 
         super().__init__("reset", command_description, subparsers, commands_dict)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("-i", "--index", nargs="*")
         command_parser.add_argument('--hard', action='store_true', default=False)
 

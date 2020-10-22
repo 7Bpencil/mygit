@@ -16,9 +16,9 @@ class Command:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description=command_description
         )
-        self.__add_arguments(command_parser)
+        self._add_arguments(command_parser)
 
-    def __add_arguments(self, command_parser: argparse.ArgumentParser):
+    def _add_arguments(self, command_parser: argparse.ArgumentParser):
         pass
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
