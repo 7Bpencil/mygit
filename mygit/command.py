@@ -1,5 +1,4 @@
 import argparse
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 
@@ -22,5 +21,5 @@ class Command:
     def __add_arguments(self, command_parser: argparse.ArgumentParser):
         pass
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
         pass

@@ -1,6 +1,8 @@
 import argparse
 from colorama import init as colorama_init, deinit as colorama_deinit, Fore
 from textwrap import dedent
+from shlex import split
+from pathlib import Path
 
 from mygit.commands.init import Init
 from mygit.commands.status import Status
@@ -13,12 +15,10 @@ from mygit.commands.merge import Merge
 from mygit.commands.reset import Reset
 from mygit.commands.commit import Commit
 
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 
 from mygit.backend import create_ignored_paths, create_indexed_paths, create_workspace_commit_state, is_init
-from file_system.file_system import FileSystem
 
 
 def main():
@@ -27,19 +27,19 @@ def main():
     parser = create_parser()
     subparsers = parser.add_subparsers(dest="command", title="mygit tools")
     commands = create_commands(subparsers)
-    namespace = parser.parse_args()
+    # namespace = parser.parse_args()
+    namespace = parser.parse_args(split("init"))
 
-    file_system = FileSystem()
-    constants = Constants()
+    constants = Constants(Path.cwd())
     state = State()
 
     if namespace.command is None:
         print(Fore.YELLOW + "write command or use 'mygit -h' for help")
     else:
-        if is_init(file_system, constants):
-            handle_command(commands, namespace, file_system, constants, state)
+        if is_init(constants):
+            handle_command(commands, namespace, constants, state)
         elif namespace.command == "init":
-            commands[namespace.command].work(namespace, file_system, constants, state)
+            commands[namespace.command].work(namespace, constants, state)
             print(Fore.GREEN + "new repository is created")
         else:
             print(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
@@ -95,12 +95,16 @@ def create_commands(subparsers: argparse._SubParsersAction):
     return commands
 
 
-def handle_command(commands: dict, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
-    create_ignored_paths(file_system, constants, state)
-    create_indexed_paths(file_system, constants, state)
-    create_workspace_commit_state(file_system, constants, state)
+def handle_command(commands: dict, namespace: argparse.Namespace, constants: Constants, state: State):
+    create_ignored_paths(constants, state)
+    create_indexed_paths(constants, state)
+    create_workspace_commit_state(constants, state)
 
     if namespace.command == "init":
         print(Fore.YELLOW + "directory already contains the repository")
     else:
-        commands[namespace.command].work(namespace, file_system, constants, state)
+        commands[namespace.command].work(namespace, constants, state)
+
+
+if __name__ == '__main__':
+    main()

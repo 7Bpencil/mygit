@@ -1,7 +1,6 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 from mygit.backend import make_commit
@@ -22,5 +21,5 @@ class Commit(Command):
     def __add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("message", nargs=1)
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
-        make_commit(namespace.message[0], file_system, constants, state)
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
+        make_commit(namespace.message[0], constants, state)

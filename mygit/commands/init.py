@@ -12,7 +12,7 @@ class Init(Command):
             "Create an empty Git repository in current directory"
         super().__init__("init", command_description, subparsers, commands_dict)
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
         file_system.create_directory(constants.mygit_path)
         file_system.create_directory(constants.mygit_objects_path)
         file_system.create_directory(constants.mygit_refs_path)
@@ -25,7 +25,7 @@ class Init(Command):
         file_system.create_file(constants.mygit_index_path)
         file_system.write_file_text(constants.mygit_ignore_path, ".mygit")
 
-        index_object(constants.mygit_ignore_path, file_system, constants, state)
-        create_ignored_paths(file_system, constants, state)
-        create_indexed_paths(file_system, constants, state)
-        make_commit("init", file_system, constants, state)
+        index_object(constants.mygit_ignore_path, constants, state)
+        create_ignored_paths(constants, state)
+        create_indexed_paths(constants, state)
+        make_commit("init", constants, state)

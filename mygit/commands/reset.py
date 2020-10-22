@@ -1,7 +1,6 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 from mygit.backend import reset_to_commit_state, delete_indexed_changes, \
@@ -41,21 +40,21 @@ class Reset(Command):
         command_parser.add_argument("-i", "--index", nargs="*")
         command_parser.add_argument('--hard', action='store_true', default=False)
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
         if namespace.index is not None:
             if len(namespace.index) > 0:
                 if namespace.hard:
-                    reset_to_commit_state(namespace.index, file_system, constants, state)
+                    reset_to_commit_state(namespace.index, constants, state)
                     print(Fore.GREEN + "specified indexed files were restored to their last recorded state")
-                delete_indexed_changes(namespace.index, file_system, constants, state)
+                delete_indexed_changes(namespace.index, constants, state)
                 print(Fore.GREEN + "specified indexed changes were deleted from index")
             else:
                 if namespace.hard:
-                    reset_all_indexed_files_to_commit_state(file_system, constants, state)
+                    reset_all_indexed_files_to_commit_state(constants, state)
                     print(Fore.GREEN + "all indexed files were restored to their last recorded state")
-                clean_index(file_system, constants)
+                clean_index(constants)
                 print(Fore.GREEN + "index was cleaned")
         else:
-            clear_workspace(file_system, state)
-            expand_tree(get_last_tree_checksum(get_current_branch_path(file_system, constants), file_system, constants), file_system, constants)
+            clear_workspace(state)
+            expand_tree(get_last_tree_checksum(get_current_branch_path(constants), constants), constants)
             print(Fore.GREEN + "workspace was reset to last commit state")

@@ -1,7 +1,6 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 from mygit.backend import print_commit_content, print_commit_content_oneline, \
@@ -29,10 +28,10 @@ class Log(Command):
                                     default=False,
                                     help='change output style to "$checksum $message" format')
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
         print_function = print_commit_content_oneline if namespace.oneline else print_commit_content
-        commit_checksum = get_last_commit_checksum(get_current_branch_path(file_system, constants), file_system)
+        commit_checksum = get_last_commit_checksum(get_current_branch_path(constants))
         while commit_checksum != "":
-            commit_content = get_commit_content(commit_checksum, file_system, constants)
+            commit_content = get_commit_content(commit_checksum, constants)
             print_function(commit_checksum, commit_content)
             commit_checksum = get_commit_parent_commit(commit_content)

@@ -1,7 +1,6 @@
 import argparse
 from mygit.command import Command
 from textwrap import dedent
-from file_system.abstract_file_system import AbstractFileSystem
 from mygit.constants import Constants
 from mygit.state import State
 from mygit.backend import remove_branch, create_new_branch_from_current, create_new_branch_from_commit, show_branches
@@ -44,15 +43,15 @@ class Branch(Command):
                                   metavar="checksum",
                                   help="creates new branch from commit")
 
-    def work(self, namespace: argparse.Namespace, file_system: AbstractFileSystem, constants: Constants, state: State):
+    def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
         if namespace.remove is not None:
-            remove_branch(namespace.remove[0], file_system, constants)
+            remove_branch(namespace.remove[0], constants)
         elif namespace.add_from_commit is not None:
             if namespace.add_from_commit[1] == "HEAD":
-                create_new_branch_from_current(namespace.add[0], file_system, constants)
+                create_new_branch_from_current(namespace.add[0], constants)
             else:
-                create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1], file_system, constants)
+                create_new_branch_from_commit(namespace.add_commit[0], namespace.add_commit[1], constants)
         elif namespace.list:
-            show_branches(file_system, constants)
+            show_branches(constants)
         else:
             print(Fore.YELLOW + "write arguments")
