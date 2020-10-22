@@ -13,7 +13,7 @@ class Commit(Command):
             Records all indexed changes in cvs
 
             Usage examples:
-              mygit commit message      specified message will be shown in log
+              mygit commit message      record indexed changes, message will be shown in log
             ''')
 
         super().__init__("commit", command_description, subparsers, commands_dict)

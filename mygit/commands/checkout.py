@@ -14,7 +14,7 @@ class Checkout(Command):
 
             Usage examples:
               mygit checkout dev      restores dev branch workspace
-                                      Note: you can't checkout with indexed but uncommited changes
+                                      Note: you can't checkout with indexed but uncommitted changes
                                       Note: you can't checkout to current/nonexistent branch
 
               mygit checkout -n exp   creates new branch from HEAD and checkouts to it.

@@ -53,7 +53,7 @@ def create_parser():
             These are common mygit commands used in various situations:
 
             start work:
-              init         Create an empty Git repository
+              init         Create an empty mygit repository
 
             work on the current change:
               index        Add file contents to the index

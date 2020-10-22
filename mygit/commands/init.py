@@ -9,7 +9,7 @@ from pathlib import Path
 class Init(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = \
-            "Create an empty Git repository in current directory"
+            "Create an empty mygit repository in current directory"
         super().__init__("init", command_description, subparsers, commands_dict)
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):

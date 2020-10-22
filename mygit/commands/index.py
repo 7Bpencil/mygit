@@ -20,7 +20,7 @@ class Index(Command):
               mygit index dir1 dir2      index changes in every not ignored file in specified directories
                                          Note: can take any amount of directories
 
-              mygit index -a             index changes in every not ignored file of workspace
+              mygit index -a             index changes in every not ignored file in workspace
             ''')
 
         super().__init__("index", command_description, subparsers, commands_dict)

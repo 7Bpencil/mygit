@@ -18,12 +18,12 @@ class Branch(Command):
 
               mygit branch -l                  show all branches
 
-              mygit branch -a exp y76ec54...   create new branch with name exp,
+              mygit branch -a expl y76ec54...  create new branch with name expl,
                                                that will point to commit y76ec54...
                                                Note: you can't create branch from nonexistent commit
                                                      you can't create branch with already existent name
 
-              mygit branch -a hotfix HEAD      create new branch with name hotfix,
+              mygit branch -a expl HEAD        create new branch with name expl,
                                                that will point to head commit
             ''')
 
