@@ -30,6 +30,7 @@ class Init(Command):
 
         Path.open(constants.mygit_branches_path / default_branch_name, 'w').close()
         Path.open(constants.mygit_index_path, "w").close()
+        Path.open(constants.mygit_log_path, "w").close()
 
         with Path.open(constants.mygit_ignore_path, "w") as ignore:
             ignore.write(".mygit")
