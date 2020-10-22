@@ -48,7 +48,7 @@ def write_down_index(c: Constants, s: State):
     result = list()
     for path in s.current_indexed_paths:
         result.append(str(path.relative_to(c.workspace_path)) + " " + s.current_indexed_paths[path])
-    content = compress(bytes("\n".join(result), encoding="utf-8"), -1)
+    content = compress(bytes("\n".join(result)), -1)
     with Path.open(c.mygit_index_path, "wb") as index:
         index.write(content)
 
@@ -73,7 +73,7 @@ def write_down_workspace_state(workspace_state: dict, c: Constants):
     result = list()
     for path in workspace_state:
         result.append(str(path.relative_to(c.workspace_path)) + " " + workspace_state[path])
-    content = compress(bytes("\n".join(result), encoding="utf-8"), -1)
+    content = compress(bytes("\n".join(result)), -1)
     checksum = sha1(content).hexdigest()
     with Path.open(c.mygit_objects_path / checksum, "wb") as workspace_state_file:
         workspace_state_file.write(content)
@@ -106,8 +106,8 @@ def get_tree_content(saved_tree_checksum: str, c: Constants):
         return content
 
     saved_tree = get_compressed_file_content(c.mygit_objects_path / saved_tree_checksum).split("\n")
-    for i in range(len(saved_tree)):
-        buffer = saved_tree[i].split()
+    for obj in saved_tree:
+        buffer = obj.split()
         object_type = buffer[0]
         path = c.workspace_path / buffer[1]
         checksum = buffer[2]
@@ -157,7 +157,7 @@ def get_compressed_file_content(file_path_absolute: Path):
     if file_path_absolute.stat().st_size == 0:
         return ""
     with Path.open(file_path_absolute, "rb") as file:
-        content = decompress(file.read()).decode(encoding="utf-8")
+        content = decompress(file.read()).decode()
     return content
 
 
@@ -182,7 +182,7 @@ def create_commit(current_branch_path: Path, commit_message: str, parent_commit_
         workspace_state_checksum + "\n" +
         commit_message + "\n" +
         str(strftime("%c %z")) + "\n" +
-        parent_commit_checksum, encoding="utf-8")
+        parent_commit_checksum)
     content = compress(content_raw, -1)
     checksum = sha1(content).hexdigest()
     commit_path = c.mygit_objects_path / checksum
@@ -210,7 +210,7 @@ def create_tree(dir_path: Path, new_workspace_state: dict, c: Constants, s: Stat
 
     if len(tree_objects) == 0:
         return None
-    content_raw = bytes("\n".join(tree_objects), encoding="utf-8")
+    content_raw = bytes("\n".join(tree_objects))
     content = compress(content_raw, -1)
     checksum = sha1(content).hexdigest()
     tree_path = c.mygit_objects_path / checksum
