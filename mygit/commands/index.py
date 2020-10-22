@@ -12,7 +12,7 @@ class Index(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Adds specified files to index for next commit.
+            Add specified files to index for next commit.
             Only indexed changes will be recorded by cvs
 
             Usage examples:

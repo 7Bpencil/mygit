@@ -10,7 +10,7 @@ class Status(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Shows status of all three trees: workspace, index, ignored
+            Show status of all three trees: workspace, index, ignored
 
             Usage examples:
                mygit status              show status of workspace

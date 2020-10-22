@@ -14,15 +14,14 @@ class Reset(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Resets indexed changes of files
-            Restores indexed files to their recorded by last commit state and clears index
+            Reset workspace or index tree for specific files or whole workspace
 
             Usage examples:
               mygit reset -i file1 file2 ...          if specified files was indexed, will clear them from index
                                                       so it will look like they are not indexed again.
                                                       Workspace won't be changed
 
-              mygit reset -i                          clears whole index
+              mygit reset -i                          clear whole index
                                                       so it will look like there's no any indexed changes
                                                       Workspace won't be changed
 
@@ -31,9 +30,9 @@ class Reset(Command):
                                                       with their last recorded versions
                                                       Note: resetting new file will delete it
 
-              mygit reset --hard -i                   replaces all indexed files with their recorded versions and clears whole index
+              mygit reset --hard -i                   replace all indexed files with their recorded versions and clear whole index
 
-              mygit reset                             returns whole workspace to last commited condition, all changes will be lost
+              mygit reset                             return whole workspace to last commited condition, all changes will be lost
             ''')
 
         super().__init__("reset", command_description, subparsers, commands_dict)

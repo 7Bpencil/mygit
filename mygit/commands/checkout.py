@@ -10,14 +10,14 @@ class Checkout(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Restores workspace state so it becomes identical to another branch's recorded state
+            Restore workspace state so it becomes identical to another branch's recorded state
 
             Usage examples:
-              mygit checkout dev      restores dev branch workspace
+              mygit checkout expl     restore expl branch workspace
                                       Note: you can't checkout with indexed but uncommitted changes
                                       Note: you can't checkout to current/nonexistent branch
 
-              mygit checkout -n exp   creates new branch from HEAD and checkouts to it.
+              mygit checkout -n expl  creates new branch expl from HEAD and checkouts to it.
                                       Note: it will not change your workspace or index
             ''')
 

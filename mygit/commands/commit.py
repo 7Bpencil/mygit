@@ -10,7 +10,7 @@ class Commit(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Records all indexed changes in cvs
+            Record all indexed changes in cvs
 
             Usage examples:
               mygit commit message      record indexed changes, message will be shown in log

@@ -12,13 +12,13 @@ class Log(Command):
     def __init__(self, subparsers: argparse._SubParsersAction, commands_dict: dict):
         command_description = dedent(
             '''
-            Shows commit history of current branch in classic format:
+            Show commit history of current branch in classic format:
               $checksum
               $date
               $message
 
             Usage examples:
-              mygit log [-o]
+              mygit log [-o]    key -o changes output style to "$checksum $message" format
             ''')
 
         super().__init__("log", command_description, subparsers, commands_dict)
