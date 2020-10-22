@@ -27,12 +27,17 @@ def main():
     subparsers = parser.add_subparsers(dest="command", title="mygit tools")
     commands = create_commands(subparsers)
     namespace = parser.parse_args()
-    log_file = ".mygit/mygit.log"
-    logging.basicConfig(level=logging.NOTSET,
-                        format='%(message)s',
-                        handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
     constants = Constants(Path.cwd())
     state = State()
+
+    log_file = ".mygit/mygit.log"
+    log_handlers = ([logging.FileHandler(log_file), logging.StreamHandler()]
+                    if is_init(constants)
+                    else [logging.StreamHandler()])
+
+    logging.basicConfig(level=logging.NOTSET,
+                        format='%(message)s',
+                        handlers=log_handlers)
 
     if namespace.command is None:
         logging.warning(Fore.YELLOW + "write command or use 'mygit -h' for help")
