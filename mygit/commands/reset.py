@@ -55,6 +55,6 @@ class Reset(Command):
                 clean_index(constants)
                 print(Fore.GREEN + "index was cleaned")
         else:
-            clear_workspace(state)
+            clear_workspace(constants, state)
             expand_tree(get_last_tree_checksum(get_current_branch_path(constants), constants), constants)
             print(Fore.GREEN + "workspace was reset to last commit state")
