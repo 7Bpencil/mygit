@@ -1,9 +1,9 @@
 from colorama import Fore
-from time import strftime
-from pathlib import Path
 from hashlib import sha1
 from mygit.constants import Constants
 from mygit.state import State
+from pathlib import Path
+from time import strftime
 from zlib import decompress, compress
 
 

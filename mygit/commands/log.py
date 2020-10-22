@@ -1,8 +1,8 @@
 import argparse
-from mygit.command import Command
 from textwrap import dedent
-from mygit.constants import Constants
 from mygit.state import State
+from mygit.constants import Constants
+from mygit.command import Command
 from mygit.backend import print_commit_content, print_commit_content_oneline, \
     get_last_commit_checksum, get_current_branch_path, \
     get_commit_content, get_commit_parent_commit

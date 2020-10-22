@@ -1,24 +1,22 @@
 import argparse
-from colorama import init as colorama_init, deinit as colorama_deinit, Fore
 from textwrap import dedent
-from shlex import split
 from pathlib import Path
 
-from mygit.commands.init import Init
+from mygit.state import State
+from mygit.constants import Constants
 from mygit.commands.status import Status
-from mygit.commands.log import Log
-from mygit.commands.index import Index
-from mygit.commands.branch import Branch
-from mygit.commands.checkout import Checkout
+from mygit.commands.reset import Reset
 from mygit.commands.print import Print
 from mygit.commands.merge import Merge
-from mygit.commands.reset import Reset
+from mygit.commands.log import Log
+from mygit.commands.init import Init
+from mygit.commands.index import Index
 from mygit.commands.commit import Commit
-
-from mygit.constants import Constants
-from mygit.state import State
+from mygit.commands.checkout import Checkout
+from mygit.commands.branch import Branch
 
 from mygit.backend import create_ignored_paths, create_indexed_paths, create_last_commit_index_state, is_init
+from colorama import init as colorama_init, deinit as colorama_deinit, Fore
 
 
 def main():
@@ -27,8 +25,7 @@ def main():
     parser = create_parser()
     subparsers = parser.add_subparsers(dest="command", title="mygit tools")
     commands = create_commands(subparsers)
-    # namespace = parser.parse_args()
-    namespace = parser.parse_args(split("init"))
+    namespace = parser.parse_args()
 
     constants = Constants(Path.cwd())
     state = State()
@@ -104,7 +101,3 @@ def handle_command(commands: dict, namespace: argparse.Namespace, constants: Con
         print(Fore.YELLOW + "directory already contains the repository")
     else:
         commands[namespace.command].work(namespace, constants, state)
-
-
-if __name__ == '__main__':
-    main()

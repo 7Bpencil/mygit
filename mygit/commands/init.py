@@ -1,8 +1,7 @@
 import argparse
-from mygit.command import Command
-from file_system.abstract_file_system import AbstractFileSystem
-from mygit.constants import Constants
 from mygit.state import State
+from mygit.constants import Constants
+from mygit.command import Command
 from mygit.backend import index_object, create_ignored_paths, create_indexed_paths, make_commit
 
 

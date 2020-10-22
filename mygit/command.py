@@ -1,6 +1,6 @@
 import argparse
-from mygit.constants import Constants
 from mygit.state import State
+from mygit.constants import Constants
 
 
 class Command:

@@ -1,8 +1,8 @@
 import argparse
-from mygit.command import Command
 from textwrap import dedent
-from mygit.constants import Constants
 from mygit.state import State
+from mygit.constants import Constants
+from mygit.command import Command
 from mygit.backend import check_status, print_indexed_paths, print_ignored_paths, print_status
 
 

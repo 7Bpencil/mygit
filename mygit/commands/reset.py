@@ -1,8 +1,8 @@
 import argparse
-from mygit.command import Command
 from textwrap import dedent
-from mygit.constants import Constants
 from mygit.state import State
+from mygit.constants import Constants
+from mygit.command import Command
 from mygit.backend import reset_to_commit_state, delete_indexed_changes, \
     reset_all_indexed_files_to_commit_state, clean_index, clear_workspace, \
     expand_tree, get_current_branch_path, get_last_tree_checksum
