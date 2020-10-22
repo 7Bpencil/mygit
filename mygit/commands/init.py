@@ -1,4 +1,6 @@
 import argparse
+import logging
+from colorama import Fore
 from mygit.state import State
 from mygit.constants import Constants
 from mygit.command import Command
@@ -39,3 +41,4 @@ class Init(Command):
             get_last_commit_index_content(constants))
 
         make_commit("init", constants, state)
+        logging.info(Fore.GREEN + "new repository is created")

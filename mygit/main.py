@@ -46,7 +46,6 @@ def main():
             handle_command(commands, namespace, constants, state)
         elif namespace.command == "init":
             commands[namespace.command].work(namespace, constants, state)
-            logging.info(Fore.GREEN + "new repository is created")
         else:
             logging.warning(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
 
