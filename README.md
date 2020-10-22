@@ -1,23 +1,30 @@
 ### CVS «mygit»
 Версия: 2.0.0  
-Автор: Эдуард Старков (Edward.Ekb@yandex.ru)  
+Автор: Эдуард Старков (Edward.Ekb@yandex.ru)
 
-#### Описание
+### Содержание  
+1. [Описание](###описание)
+2. [Требования](###требования)
+3. [Установка](###установка)
+4. [Использование](###использование)
+5. [Справка](###справка)
+
+### Описание
 небольшая локальная git-like система контроля версий
 
-#### Требования
+### Требования
 * Python версии не ниже 3.6
 * Смотри requirements.txt
 
-#### Установка
+### Установка
 python setup.py install
 
-#### Использование
+### Использование
 Предполагается использование через CLI в виде единой программы    
 Справка по запуску: `mygit --help`  
 Справка по отдельной команде: `mygit [команда] --help`
 
-#### Справка
+### Справка
 ```
 start work:
   init         Create an empty mygit repository
@@ -38,7 +45,7 @@ grow, mark and tweak your common history:
   checkout     Switch branches
 ```
 
-##### Index
+#### Index
 ```
 Add specified files to index for next commit.
 Only indexed changes will be recorded by cvs
@@ -53,7 +60,7 @@ Usage examples:
   mygit index -a             index changes in every not ignored file in workspace
 ```
 
-##### Reset
+#### Reset
 ```
 Reset workspace or index tree for specific files or whole workspace
 
@@ -76,7 +83,7 @@ Usage examples:
   mygit reset                             return whole workspace to last commited condition, all changes will be lost
 ```
 
-##### Status
+#### Status
 ```
 Show status of all three trees: workspace, index, ignored
 
@@ -86,7 +93,7 @@ Usage examples:
    mygit status --ignored    show ignored paths
 ```
 
-##### Log
+#### Log
 ```
 Show commit history of current branch in classic format:
   $checksum
@@ -98,7 +105,7 @@ Usage examples:
   mygit log [-u]    key -u or --usage shows internal log
 ```
 
-##### Print
+#### Print
 ```
 Show content of recorded objects
 
@@ -107,7 +114,7 @@ Usage examples:
                                          Note: can take any amount of files
 ```
 
-##### Commit
+#### Commit
 ```
 Record all indexed changes in cvs
 
@@ -115,7 +122,7 @@ Usage examples:
   mygit commit message      record indexed changes, message will be shown in log
 ```
 
-##### Branch
+#### Branch
 ```
 Bunch of tools for branching
 
@@ -134,7 +141,7 @@ Usage examples:
                                    that will point to head commit
 ```
 
-##### Merge
+#### Merge
 ```
 Fast-forward HEAD to another branch state (if it's possible)
 
@@ -144,7 +151,7 @@ Usage examples:
                               is subset of branch commit's line
 ```
 
-##### Checkout
+#### Checkout
 ```
 Restore workspace state so it becomes identical to another branch's recorded state
 
