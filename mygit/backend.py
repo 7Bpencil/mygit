@@ -563,6 +563,12 @@ def print_commit_content_oneline(commit_checksum: str, content: list):
     logging.info(commit_checksum + " " + content[2])
 
 
+def print_internal_log(c: Constants):
+    with Path.open(c.mygit_log_path, "r") as obj:
+        content = obj.read()
+    logging.info(content + "\n")
+
+
 # ===Print==============================================================================================================
 def print_compressed_object(checksum: str, c: Constants):
     object_path = c.mygit_objects_path / checksum

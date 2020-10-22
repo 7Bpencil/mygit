@@ -30,7 +30,7 @@ def main():
     constants = Constants(Path.cwd())
     state = State()
 
-    log_file = ".mygit/mygit.log"
+    log_file = str(constants.mygit_log_path.relative_to(constants.workspace_path))
     log_handlers = ([logging.FileHandler(log_file), logging.StreamHandler()]
                     if is_init(constants)
                     else [logging.StreamHandler()])

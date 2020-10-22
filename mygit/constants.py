@@ -6,6 +6,7 @@ class Constants:
         self.workspace_path = workspace_path
         self.mygit_ignore_path = self.workspace_path / ".mygit_ignore"
         self.mygit_path = self.workspace_path / ".mygit"
+        self.mygit_log_path = self.mygit_path / "mygit.log"
         self.mygit_index_dir_path = self.mygit_path / "index"
         self.mygit_index_path = self.mygit_index_dir_path / "index"
         self.mygit_head_path = self.mygit_path / "head"

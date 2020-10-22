@@ -94,7 +94,8 @@ Show commit history of current branch in classic format:
   $message
 
 Usage examples:
-  mygit log [-o]    key -o changes output style to "$checksum $message" format
+  mygit log [-o]    key -o or --oneline changes output style to "$checksum $message" format
+  mygit log [-u]    key -u or --usage shows internal log
 ```
 
 ##### Print
