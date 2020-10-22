@@ -15,7 +15,7 @@ from mygit.commands.commit import Commit
 from mygit.commands.checkout import Checkout
 from mygit.commands.branch import Branch
 
-from mygit.backend import is_init
+from mygit.backend import is_init, get_compressed_file_content, get_last_commit_index_content
 from colorama import init as colorama_init, deinit as colorama_deinit, Fore
 
 
@@ -93,7 +93,10 @@ def create_commands(subparsers: argparse._SubParsersAction):
 
 
 def handle_command(commands: dict, namespace: argparse.Namespace, constants: Constants, state: State):
-    state.load_cache(constants)
+    state.load_cache(
+        constants,
+        get_compressed_file_content(constants.mygit_index_path),
+        get_last_commit_index_content(constants))
 
     if namespace.command == "init":
         print(Fore.YELLOW + "directory already contains the repository")

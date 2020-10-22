@@ -2,7 +2,7 @@ import argparse
 from mygit.state import State
 from mygit.constants import Constants
 from mygit.command import Command
-from mygit.backend import index_object, make_commit
+from mygit.backend import index_object, make_commit, get_compressed_file_content, get_last_commit_index_content
 from pathlib import Path
 
 
@@ -29,5 +29,9 @@ class Init(Command):
             ignore.write(".mygit")
 
         index_object(constants.mygit_ignore_path, constants, state)
-        state.load_cache(constants)
+        state.load_cache(
+            constants,
+            get_compressed_file_content(constants.mygit_index_path),
+            get_last_commit_index_content(constants))
+
         make_commit("init", constants, state)

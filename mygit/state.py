@@ -1,5 +1,4 @@
 from mygit.constants import Constants
-from mygit.backend import get_compressed_file_content, get_last_commit_index_content
 from pathlib import Path
 
 
@@ -14,10 +13,10 @@ class State:
         self.status_indexed_but_changed_paths = []
         self.status_not_indexed_paths = []
 
-    def load_cache(self, c: Constants):
+    def load_cache(self, c: Constants, current_index_file_content: str, last_commit_index_file_content: str):
         self.__create_ignored_paths(c)
-        self.__create_indexed_paths(c)
-        self.__create_last_commit_index_state(c)
+        self.__create_index(current_index_file_content, c)
+        self.__create_index(last_commit_index_file_content, c)
 
     def __create_ignored_paths(self, c: Constants):
         with Path.open(c.mygit_ignore_path, "r") as ignored:
@@ -40,14 +39,6 @@ class State:
                 self.__add_file_in_ignored(child)
             else:
                 self.__add_directory_in_ignored(child)
-
-    def __create_indexed_paths(self, c: Constants):
-        content = get_compressed_file_content(c.mygit_index_path)
-        self.__create_index(content, c)
-
-    def __create_last_commit_index_state(self, c: Constants):
-        content = get_last_commit_index_content(c)
-        self.__create_index(content, c)
 
     def __create_index(self, content: str, c: Constants):
         if content != "":
