@@ -1,4 +1,5 @@
 import argparse
+import logging
 from textwrap import dedent
 from pathlib import Path
 
@@ -27,19 +28,20 @@ def main():
     commands = create_commands(subparsers)
     namespace = parser.parse_args()
 
+    logging.basicConfig(filename="mygit.log", level=logging.NOTSET, format='%(message)s')
     constants = Constants(Path.cwd())
     state = State()
 
     if namespace.command is None:
-        print(Fore.YELLOW + "write command or use 'mygit -h' for help")
+        logging.info(Fore.YELLOW + "write command or use 'mygit -h' for help")
     else:
         if is_init(constants):
             handle_command(commands, namespace, constants, state)
         elif namespace.command == "init":
             commands[namespace.command].work(namespace, constants, state)
-            print(Fore.GREEN + "new repository is created")
+            logging.info(Fore.GREEN + "new repository is created")
         else:
-            print(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
+            logging.info(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
 
     colorama_deinit()
 
@@ -99,6 +101,6 @@ def handle_command(commands: dict, namespace: argparse.Namespace, constants: Con
         get_last_commit_index_content(constants))
 
     if namespace.command == "init":
-        print(Fore.YELLOW + "directory already contains the repository")
+        logging.info(Fore.YELLOW + "directory already contains the repository")
     else:
         commands[namespace.command].work(namespace, constants, state)

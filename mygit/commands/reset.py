@@ -1,4 +1,6 @@
 import argparse
+import logging
+from colorama import Fore
 from textwrap import dedent
 from mygit.state import State
 from mygit.constants import Constants
@@ -45,16 +47,16 @@ class Reset(Command):
             if len(namespace.index) > 0:
                 if namespace.hard:
                     reset_to_commit_state(namespace.index, constants, state)
-                    print(Fore.GREEN + "specified indexed files were restored to their last recorded state")
+                    logging.info(Fore.GREEN + "specified indexed files were restored to their last recorded state")
                 delete_indexed_changes(namespace.index, constants, state)
-                print(Fore.GREEN + "specified indexed changes were deleted from index")
+                logging.info(Fore.GREEN + "specified indexed changes were deleted from index")
             else:
                 if namespace.hard:
                     reset_all_indexed_files_to_commit_state(constants, state)
-                    print(Fore.GREEN + "all indexed files were restored to their last recorded state")
+                    logging.info(Fore.GREEN + "all indexed files were restored to their last recorded state")
                 clean_index(constants)
-                print(Fore.GREEN + "index was cleaned")
+                logging.info(Fore.GREEN + "index was cleaned")
         else:
             clear_workspace(constants, state)
             expand_tree(get_last_tree_checksum(get_current_branch_path(constants), constants), constants)
-            print(Fore.GREEN + "workspace was reset to last commit state")
+            logging.info(Fore.GREEN + "workspace was reset to last commit state")

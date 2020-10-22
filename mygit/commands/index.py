@@ -1,4 +1,6 @@
 import argparse
+import logging
+from colorama import Fore
 from textwrap import dedent
 from mygit.state import State
 from mygit.constants import Constants
@@ -37,4 +39,4 @@ class Index(Command):
         elif len(namespace.files) > 0:
             index_input_files(namespace.files, constants, state)
         else:
-            print(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")
+            logging.info(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")

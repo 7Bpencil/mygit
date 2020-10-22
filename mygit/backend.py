@@ -1,3 +1,4 @@
+import logging
 from colorama import Fore
 from hashlib import sha1
 from mygit.constants import Constants
@@ -14,7 +15,7 @@ def is_init(c: Constants):
 def write_down_index(c: Constants, s: State):
     result = list()
     for path in s.current_indexed_paths:
-        result.append(str(path.relative_to(c.workspace_path)) + " " + s.current_indexed_paths[path])
+        result.append(f"{path.relative_to(c.workspace_path)} {s.current_indexed_paths[path]}")
     content = compress(bytes("\n".join(result), encoding="utf-8"), -1)
     with Path.open(c.mygit_index_path, "wb") as index:
         index.write(content)
@@ -29,7 +30,7 @@ def clean_index(c: Constants):
 def write_down_workspace_state(workspace_state: dict, c: Constants):
     result = list()
     for path in workspace_state:
-        result.append(str(path.relative_to(c.workspace_path)) + " " + workspace_state[path])
+        result.append(f"{path.relative_to(c.workspace_path)} {workspace_state[path]}")
     content = compress(bytes("\n".join(result), encoding="utf-8"), -1)
     checksum = sha1(content).hexdigest()
     with Path.open(c.mygit_objects_path / checksum, "wb") as workspace_state_file:
@@ -74,7 +75,7 @@ def get_tree_content(saved_tree_checksum: str, c: Constants):
         elif path not in content[object_type]:
             content[object_type][path] = checksum
         else:
-            print(Fore.RED + "path appears more than ones: " + str(path) + " whole tree: " + saved_tree)
+            logging.info(Fore.RED + f"path appears more than ones: {path} whole tree: {saved_tree}")
 
     return content
 
@@ -124,9 +125,10 @@ def get_compressed_file_content(file_path_absolute: Path):
 # ===Commit=============================================================================================================
 def make_commit(commit_message: str, c: Constants, s: State):
     if not has_uncommitted_changes(c, s):
-        print(Fore.YELLOW + "working tree is clean, you can't commit if there's no changes")
+        logging.info(Fore.YELLOW + "working tree is clean, you can't commit if there's no changes")
     elif len(s.status_indexed_paths) == 0:
-        print(Fore.YELLOW + "you can't commit if your index is empty, use index <file1, file2, ...> to index changes")
+        logging.info(
+            Fore.YELLOW + "you can't commit if your index is empty, use index <file1, file2, ...> to index changes")
     else:
         current_branch_path = get_current_branch_path(c)
         last_commit_checksum = get_last_commit_checksum(current_branch_path)
@@ -161,12 +163,12 @@ def create_tree(dir_path: Path, new_workspace_state: dict, c: Constants, s: Stat
         if child.is_file():
             blob_checksum = create_blob(child, c, s)
             if blob_checksum is not None:
-                tree_objects.append("blob " + str(child.relative_to(c.workspace_path)) + " " + blob_checksum)
+                tree_objects.append(f"blob {child.relative_to(c.workspace_path)} {blob_checksum}")
                 new_workspace_state[child] = blob_checksum
         else:
             tree_checksum = create_tree(child, new_workspace_state, c, s)
             if tree_checksum is not None:
-                tree_objects.append("tree " + str(child.relative_to(c.workspace_path)) + " " + tree_checksum)
+                tree_objects.append(f"tree {child.relative_to(c.workspace_path)} {tree_checksum}")
 
     if len(tree_objects) == 0:
         return None
@@ -198,23 +200,23 @@ def create_blob(file_path: Path, c: Constants, s: State):
 def checkout_to_branch(branch_name, c: Constants, s: State):
     branch_path = c.mygit_branches_path / branch_name
     if not branch_path.exists():
-        print(Fore.RED + "branch " + branch_name + " doesn't exist")
+        logging.info(Fore.RED + f"branch {branch_name} doesn't exist")
     elif has_uncommitted_changes(c, s):
-        print(Fore.RED + "you can't checkout with uncommitted changes, use commit or reset")  # TODO reset
+        logging.info(Fore.RED + "you can't checkout with uncommitted changes, use commit or reset")  # TODO reset
     else:
         clear_workspace(c, s)
         expand_tree(get_last_tree_checksum(branch_path, c), c)
 
         with Path.open(c.mygit_head_path, "w") as head:
             head.write(branch_name)
-        print(Fore.GREEN + "moved to branch " + branch_name)
+        logging.info(Fore.GREEN + f"moved to branch {branch_name}")
 
 
 def create_new_branch_from_current_and_checkout(new_branch_name: str, c: Constants):
     create_new_branch_from_current(new_branch_name, c)
     with Path.open(c.mygit_head_path, "w") as head:
         head.write(new_branch_name)
-    print(Fore.GREEN + "moved to new branch " + new_branch_name)
+    logging.info(Fore.GREEN + f"moved to new branch {new_branch_name}")
 
 
 def expand_tree(tree_checksum: str, c: Constants):
@@ -241,14 +243,14 @@ def expand_blob(blob_checksum: str, target_filename: Path, c: Constants):
 def remove_branch(branch_name: str, c: Constants):
     branch_path = c.mygit_branches_path / branch_name
     if branch_name == get_current_branch_name(c):
-        print(Fore.YELLOW + "you can't remove the branch, on which you are. Checkout to another branch first")
+        logging.info(Fore.YELLOW + "you can't remove the branch, on which you are. Checkout to another branch first")
     elif not branch_path.exists():
-        print(Fore.RED + "branch doesn't exist")
+        logging.info(Fore.RED + "branch doesn't exist")
     else:
         with Path.open(branch_path, "r") as branch:
             commit_checksum = branch.read()
         Path.unlink(branch_path)
-        print(Fore.GREEN + "Deleted branch " + branch_name + " (" + commit_checksum + ")")
+        logging.info(Fore.GREEN + f"Deleted branch {branch_name} ({commit_checksum})")
 
 
 def create_new_branch_from_current(new_branch_name: str, c: Constants):
@@ -261,19 +263,19 @@ def create_new_branch_from_commit(branch_name: str, commit_checksum: str, c: Con
     branch_path = c.mygit_branches_path / branch_name
     commit_path = c.mygit_objects_path / commit_checksum
     if branch_path.exists():
-        print(Fore.YELLOW + "branch " + branch_name + " already exists")
+        logging.info(Fore.YELLOW + f"branch {branch_name} already exists")
     elif not commit_path.exists():
-        print(Fore.RED + "commit doesn't exist")
+        logging.info(Fore.RED + "commit doesn't exist")
     else:
         with Path.open(branch_path, "w") as new_branch:
             new_branch.write(commit_checksum)
-        print(Fore.GREEN + "new branch " + branch_name + " is created")
+        logging.info(Fore.GREEN + f"new branch {branch_name} is created")
 
 
 def show_branches(c: Constants):
-    print("branches:")
+    logging.info("branches:")
     for branch_path in c.mygit_branches_path.iterdir():
-        print(Fore.YELLOW + str(branch_path.relative_to(c.mygit_branches_path)))
+        logging.info(Fore.YELLOW + str(branch_path.relative_to(c.mygit_branches_path)))
 
 
 # ===Merge==============================================================================================================
@@ -283,15 +285,16 @@ def merge(branch_name: str, c: Constants, s: State):
     current_branch_path = c.mygit_branches_path / current_branch_name
 
     if not branch_path.exists():
-        print(Fore.RED + "branch " + branch_name + " doesn't exist")
+        logging.info(Fore.RED + f"branch {branch_name} doesn't exist")
     else:
         from_commit_checksum = get_last_commit_checksum(current_branch_path)
         to_commit_checksum = get_last_commit_checksum(branch_path)
         if from_commit_checksum == to_commit_checksum:
-            print(
-                Fore.RED + "You can't merge " + current_branch_name + " with " + branch_name + ".\nBranches are pointing on the same commit")
+            logging.info(
+                Fore.RED + f"You can't merge {current_branch_name} with {branch_name}\n"
+                           f"Branches are pointing on the same commit")
         elif has_uncommitted_changes(c, s):
-            print(Fore.RED + "you can't merge with uncommitted changes, use commit or reset")  # TODO reset
+            logging.info(Fore.RED + "you can't merge with uncommitted changes, use commit or reset")  # TODO reset
         elif can_be_fast_forwarded(from_commit_checksum, to_commit_checksum, c):
             clear_workspace(c, s)
             expand_tree(get_tree_checksum(c.mygit_objects_path / to_commit_checksum), c)
@@ -299,10 +302,10 @@ def merge(branch_name: str, c: Constants, s: State):
             with Path.open(current_branch_path, "w") as current_branch:
                 current_branch.write(to_commit_checksum)
 
-            print(Fore.GREEN + "merged " + branch_name + " into current branch")
-            print(Fore.RESET + "you can safely delete branch " + branch_name + " with branch -r <branch_name>")
+            logging.info(Fore.GREEN + f"merged {branch_name} into current branch")
+            logging.info(Fore.RESET + f"you can safely delete branch {branch_name} with branch -r {branch_name}")
         else:
-            print(Fore.RED + "Possible merging conflicts, fast-forward is impossible")
+            logging.info(Fore.RED + "Possible merging conflicts, fast-forward is impossible")
 
 
 def can_be_fast_forwarded(from_commit_checksum: str, to_commit_checksum: str, c: Constants):
@@ -394,28 +397,25 @@ def check_status(c: Constants, s: State):
 
 
 def print_status(c: Constants, s: State):
-    print("On branch " + get_current_branch_name(c))
+    logging.info(f"On branch {get_current_branch_name(c)}")
 
     if not has_uncommitted_changes(c, s):
-        print("nothing to commit, working tree is clean")
+        logging.info("nothing to commit, working tree is clean")
 
     if len(s.status_indexed_paths) > 0:
-        print(Fore.RESET + "indexed changes:")
+        logging.info(Fore.RESET + "indexed changes:")
         for indexed in s.status_indexed_paths:
-            print(Fore.GREEN + indexed)
-        print()
+            logging.info(Fore.GREEN + indexed)
 
     if len(s.status_not_indexed_paths) > 0:
-        print(Fore.RESET + "not indexed changes:")
+        logging.info(Fore.RESET + "not indexed changes:")
         for not_indexed in s.status_not_indexed_paths:
-            print(Fore.RED + not_indexed)
-        print()
+            logging.info(Fore.RED + not_indexed)
 
     if len(s.status_indexed_but_changed_paths) > 0:
-        print(Fore.RESET + "indexed files with new not indexed changes:")
+        logging.info(Fore.RESET + "indexed files with new not indexed changes:")
         for indexed in s.status_indexed_but_changed_paths:
-            print(Fore.YELLOW + indexed)
-        print()
+            logging.info(Fore.YELLOW + indexed)
 
 
 def check_blob(file_path: Path, c: Constants, s: State):
@@ -456,18 +456,18 @@ def check_deleted_files(c: Constants, s: State):
 
 
 def print_ignored_paths(c: Constants, s: State):
-    print(Fore.YELLOW + "ignored paths:")
+    logging.info(Fore.YELLOW + "ignored paths:")
     for ignored in s.ignored_paths:
-        print(str(ignored.relative_to(c.workspace_path)))
+        logging.info(str(ignored.relative_to(c.workspace_path)))
 
 
 def print_indexed_paths(c: Constants, s: State):
     if len(s.current_indexed_paths) == 0:
-        print(Fore.YELLOW + "index is empty, use index <file1, file2, ...> to index changes")
+        logging.info(Fore.YELLOW + "index is empty, use index <file1, file2, ...> to index changes")
     else:
-        print(Fore.RESET + "indexed paths:")
+        logging.info(Fore.RESET + "indexed paths:")
         for path in s.current_indexed_paths:
-            print(Fore.GREEN + str(path.relative_to(c.workspace_path)) + " " + s.current_indexed_paths[path])
+            logging.info(Fore.GREEN + f"{path.relative_to(c.workspace_path)} {s.current_indexed_paths[path]}")
 
 
 # ===Index==============================================================================================================
@@ -480,7 +480,7 @@ def index_all_changes(c: Constants, s: State):
 
 def index_input_files(files: list, c: Constants, s: State):
     if len(files) == 0:
-        print(Fore.YELLOW + "you didn't mention any file")
+        logging.info(Fore.YELLOW + "you didn't mention any file")
     else:
         for file in files:
             index_object(c.workspace_path / file, c, s)
@@ -490,9 +490,9 @@ def index_input_files(files: list, c: Constants, s: State):
 def index_object(file_path_absolute: Path, c: Constants, s: State):
     file_path_relative = str(file_path_absolute.relative_to(c.workspace_path))
     if not file_path_absolute.exists() and file_path_absolute not in s.last_commit_indexed_path:
-        print(Fore.RED + "file or directory doesn't exist: " + file_path_relative)
+        logging.info(Fore.RED + f"file or directory doesn't exist: {file_path_relative}")
     elif file_path_absolute in s.ignored_paths:
-        print(Fore.YELLOW + "file has been ignored: " + file_path_relative)
+        logging.info(Fore.YELLOW + f"file has been ignored: {file_path_relative}")
     else:
         if not file_path_absolute.exists():  # TODO so we can't index deleted directory
             index_file(file_path_absolute, c, s)
@@ -553,21 +553,20 @@ def get_commit_parent_commit(commit_content: list):
 
 
 def print_commit_content(commit_checksum: str, content: list):
-    print("commit: " + commit_checksum)
-    print("date: " + content[3])
-    print("message:")
-    print("\n" + " " * 4 + content[2])
-    print()
+    logging.info("commit: " + commit_checksum)
+    logging.info("date: " + content[3])
+    logging.info("message:")
+    logging.info("\n" + " " * 4 + content[2] + "\n")
 
 
 def print_commit_content_oneline(commit_checksum: str, content: list):
-    print(commit_checksum + " " + content[2])
+    logging.info(commit_checksum + " " + content[2])
 
 
 # ===Print==============================================================================================================
 def print_compressed_object(checksum: str, c: Constants):
     object_path = c.mygit_objects_path / checksum
     if not object_path.exists():
-        print(Fore.RED + "object doesn't exist")
+        logging.info(Fore.RED + "object doesn't exist")
         return
-    print(get_compressed_file_content(object_path))
+    logging.info(get_compressed_file_content(object_path) + "\n")

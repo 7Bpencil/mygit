@@ -1,4 +1,6 @@
 import argparse
+import logging
+from colorama import Fore
 from textwrap import dedent
 from mygit.state import State
 from mygit.constants import Constants
@@ -54,4 +56,4 @@ class Branch(Command):
         elif namespace.list:
             show_branches(constants)
         else:
-            print(Fore.YELLOW + "write arguments")
+            logging.info(Fore.YELLOW + "write arguments")
