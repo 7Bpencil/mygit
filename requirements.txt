@@ -1,2 +1,2 @@
-colorama~=0.4.3
-setuptools~=41.2.0
+colorama~=0.4.4
+setuptools~=50.3.2
