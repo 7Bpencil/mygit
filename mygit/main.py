@@ -27,13 +27,15 @@ def main():
     subparsers = parser.add_subparsers(dest="command", title="mygit tools")
     commands = create_commands(subparsers)
     namespace = parser.parse_args()
-
-    logging.basicConfig(filename="mygit.log", level=logging.NOTSET, format='%(message)s')
+    log_file = ".mygit/mygit.log"
+    logging.basicConfig(level=logging.NOTSET,
+                        format='%(message)s',
+                        handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
     constants = Constants(Path.cwd())
     state = State()
 
     if namespace.command is None:
-        logging.info(Fore.YELLOW + "write command or use 'mygit -h' for help")
+        logging.warning(Fore.YELLOW + "write command or use 'mygit -h' for help")
     else:
         if is_init(constants):
             handle_command(commands, namespace, constants, state)
@@ -41,7 +43,7 @@ def main():
             commands[namespace.command].work(namespace, constants, state)
             logging.info(Fore.GREEN + "new repository is created")
         else:
-            logging.info(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
+            logging.warning(Fore.YELLOW + "directory doesn't contain a repository. Use 'mygit init' to create new one")
 
     colorama_deinit()
 
@@ -101,6 +103,6 @@ def handle_command(commands: dict, namespace: argparse.Namespace, constants: Con
         get_last_commit_index_content(constants))
 
     if namespace.command == "init":
-        logging.info(Fore.YELLOW + "directory already contains the repository")
+        logging.warning(Fore.YELLOW + "directory already contains the repository")
     else:
         commands[namespace.command].work(namespace, constants, state)

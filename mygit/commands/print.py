@@ -15,11 +15,11 @@ class Print(Command):
             Show content of recorded objects
 
             Usage examples:
-              mygit logging.info checksum1 checksum2 ...    logging.info content of compressed object files
+              mygit print checksum1 checksum2 ...    print content of compressed object files
                                                      Note: can take any amount of files
             ''')
 
-        super().__init__("logging.info", command_description, subparsers, commands_dict)
+        super().__init__("print", command_description, subparsers, commands_dict)
 
     def _add_arguments(self, command_parser: argparse.ArgumentParser):
         command_parser.add_argument("compressed_files", nargs="+")
@@ -28,4 +28,4 @@ class Print(Command):
         for file in namespace.compressed_files:
             print_compressed_object(file, constants)
         if len(namespace.compressed_files) == 0:
-            logging.info(Fore.YELLOW + "logging.info <checksum1, checksum2, ...> to logging.info objects")
+            logging.warning(Fore.YELLOW + "print <checksum1, checksum2, ...> to print objects")

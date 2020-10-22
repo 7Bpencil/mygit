@@ -39,4 +39,4 @@ class Index(Command):
         elif len(namespace.files) > 0:
             index_input_files(namespace.files, constants, state)
         else:
-            logging.info(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")
+            logging.warning(Fore.YELLOW + "use index -a or index <file1, file2, ...> to index changes")

@@ -56,4 +56,4 @@ class Branch(Command):
         elif namespace.list:
             show_branches(constants)
         else:
-            logging.info(Fore.YELLOW + "write arguments")
+            logging.warning(Fore.YELLOW + "write arguments")
