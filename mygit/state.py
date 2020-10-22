@@ -15,8 +15,8 @@ class State:
 
     def load_cache(self, c: Constants, current_index_file_content: str, last_commit_index_file_content: str):
         self.__create_ignored_paths(c)
-        self.__create_index(current_index_file_content, c)
-        self.__create_index(last_commit_index_file_content, c)
+        self.__create_index(self.current_indexed_paths, current_index_file_content, c)
+        self.__create_index(self.last_commit_indexed_path, last_commit_index_file_content, c)
 
     def __create_ignored_paths(self, c: Constants):
         with Path.open(c.mygit_ignore_path, "r") as ignored:
@@ -40,10 +40,11 @@ class State:
             else:
                 self.__add_directory_in_ignored(child)
 
-    def __create_index(self, content: str, c: Constants):
+    @staticmethod
+    def __create_index(index: dict, content: str, c: Constants):
         if content != "":
             for buffer in content.split("\n"):
                 pair_path_blob = buffer.split()
                 blob_path = c.workspace_path / pair_path_blob[0]
                 blob_checksum = pair_path_blob[1]
-                self.current_indexed_paths[blob_path] = blob_checksum
+                index[blob_path] = blob_checksum
