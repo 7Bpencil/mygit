@@ -9,7 +9,24 @@ from zlib import decompress, compress
 
 
 def is_init(c: Constants):
-    return c.mygit_path.exists()
+    mygit_files = c.__dict__
+    for file_name in mygit_files:
+        if len(file_name) > 5 and file_name[:5] == "mygit" and not mygit_files[file_name].exists():
+            return False
+
+    return True
+
+
+def has_collisions_with_service_files(c: Constants) -> bool:
+    colliding_files = 0
+    mygit_files = c.__dict__
+    for file_name in mygit_files:
+        if len(file_name) > 5 and file_name[:5] == "mygit" and mygit_files[file_name].exists():
+            logging.error(Fore.RED + f"file {file_name} prevent mygit from creating a repository,\n"
+                                     f"rename or delete it")
+            colliding_files += 1
+
+    return colliding_files != 0
 
 
 def write_down_index(c: Constants, s: State):

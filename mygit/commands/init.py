@@ -2,7 +2,8 @@ import argparse
 from mygit.state import State
 from mygit.constants import Constants
 from mygit.command import Command
-from mygit.backend import index_object, make_commit, get_compressed_file_content, get_last_commit_index_content
+from mygit.backend import index_object, make_commit, get_compressed_file_content,\
+    get_last_commit_index_content, has_collisions_with_service_files
 from pathlib import Path
 
 
@@ -13,6 +14,9 @@ class Init(Command):
         super().__init__("init", command_description, subparsers, commands_dict)
 
     def work(self, namespace: argparse.Namespace, constants: Constants, state: State):
+        if has_collisions_with_service_files(constants):
+            return
+
         Path.mkdir(constants.mygit_path)
         Path.mkdir(constants.mygit_objects_path)
         Path.mkdir(constants.mygit_refs_path)
