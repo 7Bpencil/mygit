@@ -33,7 +33,7 @@ examine the history and state:
 grow, mark and tweak your common history:
   commit       Record changes to the repository
   branch       List, create, or delete branches
-  merge        Join two or more development histories together
+  merge        Join two development histories together
   checkout     Switch branches
 ```
 
