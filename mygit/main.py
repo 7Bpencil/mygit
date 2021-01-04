@@ -1,37 +1,40 @@
 import argparse
 import logging
-from textwrap import dedent
-from pathlib import Path
+import sys
 
-from mygit.state import State
-from mygit.constants import Constants
-from mygit.commands.status import Status
-from mygit.commands.reset import Reset
-from mygit.commands.print import Print
-from mygit.commands.merge import Merge
-from mygit.commands.log import Log
-from mygit.commands.init import Init
-from mygit.commands.index import Index
-from mygit.commands.commit import Commit
-from mygit.commands.checkout import Checkout
-from mygit.commands.branch import Branch
-
-from mygit.backend import is_init, get_compressed_file_content, get_last_commit_index_content
 from colorama import init as colorama_init, deinit as colorama_deinit, Fore
+from mygit.backend import is_init, get_compressed_file_content, get_last_commit_index_content
+from mygit.commands.branch import Branch
+from mygit.commands.checkout import Checkout
+from mygit.commands.commit import Commit
+from mygit.commands.index import Index
+from mygit.commands.init import Init
+from mygit.commands.log import Log
+from mygit.commands.merge import Merge
+from mygit.commands.print import Print
+from mygit.commands.reset import Reset
+from mygit.commands.status import Status
+from mygit.constants import Constants
+from mygit.state import State
+from pathlib import Path
+from textwrap import dedent
 
 
-def main():
+def start():
+    main(Path.cwd(), sys.argv[1:])
+
+
+def main(workspace_path: Path, sys_args: list):
     colorama_init()
 
     parser = create_parser()
     subparsers = parser.add_subparsers(dest="command", title="mygit tools")
     commands = create_commands(subparsers)
-    namespace = parser.parse_args()
-    constants = Constants(Path.cwd())
+    namespace = parser.parse_args(sys_args)
+    constants = Constants(workspace_path)
     state = State()
 
-    log_file = str(constants.mygit_log_path.relative_to(constants.workspace_path))
-    log_handlers = ([logging.FileHandler(log_file), logging.StreamHandler()]
+    log_handlers = ([logging.FileHandler(constants.mygit_log_path), logging.StreamHandler()]
                     if is_init(constants)
                     else [logging.StreamHandler()])
 

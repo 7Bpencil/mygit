@@ -3,9 +3,10 @@ Small git-like version control system
 Author: Edward Starkov (Edward.Ekb@yandex.ru)  
 
 ### Usage
-Intended to be used via CLI as a single program  
-Get man-page for the whole program: `mygit --help`    
-Get man-page for a command: `mygit [command] --help`  
+You can use it via CLI as a single program (see *Reference*)  
+or through script (such examples can be found in test cases)  
+Get man-page for the whole program: `mygit -h` or `mygit --help`     
+Get man-page for a command: `mygit [command] -h` or `mygit [command] --help`  
 
 ### Installation requirements
 * Python version >= 3.6
