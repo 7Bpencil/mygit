@@ -1,6 +1,6 @@
 ### VCS "mygit"
-Small git-like version control system  
-Author: Edward Starkov (Edward.Ekb@yandex.ru)  
+Small git-like version control system for educational and recreational activities    
+Author: Edward Starkov (@7Bpencil)  
 
 ### Usage
 You can use it via CLI as a single program (see *Reference*)  
