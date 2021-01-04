@@ -57,7 +57,7 @@ def create_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=dedent(
             '''
-            mygit is small git-clone cvs.
+            mygit is small git-clone vcs.
             These are common mygit commands used in various situations:
 
             start work:

@@ -1,30 +1,22 @@
-### CVS «mygit»
-Версия: 2.0.0  
-Автор: Эдуард Старков (Edward.Ekb@yandex.ru)
+### VCS "mygit"
+Small git-like version control system  
+Author: Edward Starkov (Edward.Ekb@yandex.ru)  
 
-### Содержание  
-1. [Описание](###описание)
-2. [Требования](###требования)
-3. [Установка](###установка)
-4. [Использование](###использование)
-5. [Справка](###справка)
+### Usage
+Intended to be used via CLI as a single program  
+Get man-page for the whole program: `mygit --help`    
+Get man-page for a command: `mygit [command] --help`  
 
-### Описание
-небольшая локальная git-like система контроля версий
+### Installation requirements
+* Python version >= 3.6
+* See requirements.txt
 
-### Требования
-* Python версии не ниже 3.6
-* Смотри requirements.txt
-
-### Установка
+### Installation
+```
 python setup.py install
+```
 
-### Использование
-Предполагается использование через CLI в виде единой программы    
-Справка по запуску: `mygit --help`  
-Справка по отдельной команде: `mygit [команда] --help`
-
-### Справка
+### Reference
 ```
 start work:
   init         Create an empty mygit repository
@@ -48,7 +40,7 @@ grow, mark and tweak your common history:
 #### Index
 ```
 Add specified files to index for next commit.
-Only indexed changes will be recorded by cvs
+Only indexed changes will be recorded by vcs
 
 Usage examples:
   mygit index file1 file2    index changes in file1 and file2
@@ -116,7 +108,7 @@ Usage examples:
 
 #### Commit
 ```
-Record all indexed changes in cvs
+Record all indexed changes in vcs
 
 Usage examples:
   mygit commit message      record indexed changes, message will be shown in log

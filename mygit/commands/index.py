@@ -13,7 +13,7 @@ class Index(Command):
         command_description = dedent(
             '''
             Add specified files to index for next commit.
-            Only indexed changes will be recorded by cvs
+            Only indexed changes will be recorded by vcs
 
             Usage examples:
               mygit index file1 file2    index changes in file1 and file2
